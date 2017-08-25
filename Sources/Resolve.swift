@@ -227,6 +227,7 @@ extension DependencyContainer {
       }
     }
 
+    //Search the parent for resolved instances.
     if let parent = parent {
       if let previouslyResolvedInParent : T = try? parent.inContext(key: key,
                        injectedInType: self.context.injectedInType,

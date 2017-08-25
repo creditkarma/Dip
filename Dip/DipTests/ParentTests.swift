@@ -502,7 +502,8 @@ class ParentTests: XCTestCase {
     }
   }
 
-  func testReuseWorks() {
+  
+  func testReusedContainersFoundInParentContainers() {
 
     let container = DependencyContainer()
 
