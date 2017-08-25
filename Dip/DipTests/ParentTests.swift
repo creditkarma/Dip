@@ -502,8 +502,12 @@ class ParentTests: XCTestCase {
     }
   }
 
-  
-  func testReusedContainersFoundInParentContainers() {
+  /**
+  * Attempting to resolve from a child container may be resolved in a parent container several time.
+  * This value should be reused where appropriate.
+  */
+
+  func testReusedDependenciesFoundInParentContainers() {
 
     let container = DependencyContainer()
 
@@ -520,13 +524,11 @@ class ParentTests: XCTestCase {
 
     var count = 0
     container.register { (presenter: Presenter, viewController: ViewController, title: String) -> WireFrame in
-      print("Here!")
       count = count + 1
-      return WireFrame(presenter: presenter, viewController: viewController, title: "\(title) : \(count)") as WireFrame
+      return WireFrame(presenter: presenter, viewController: viewController, title: "\(title):\(count)") as WireFrame
     }
 
     let childContainer = DependencyContainer(parent: container)
-
     childContainer.register {
       "Title"
     }
@@ -536,7 +538,7 @@ class ParentTests: XCTestCase {
       return
     }
     XCTAssert(wireFrame.presenter.wireFrame === wireFrame)
+    XCTAssert(count == 2)
+    XCTAssertEqual("Title:1", wireFrame.title)
   }
-
-
 }
