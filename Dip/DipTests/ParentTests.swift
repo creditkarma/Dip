@@ -179,16 +179,24 @@ class ParentTests: XCTestCase {
 
   }
 
-  class LevelTwo {
+  class LevelTwo : Resolvable{
     let levelOne : LevelOne
+    var resolvedInjectedContainer : DependencyContainer?
+
     init(levelOne : LevelOne ){
       self.levelOne = levelOne
+    }
+
+    func resolveDependencies(_ container: DependencyContainer){
+      resolvedInjectedContainer = container
     }
   }
 
   class LevelThree {
     let levelTwo : LevelTwo
     var anotherLevelTwo : LevelTwo?
+
+
     init(levelTwo : LevelTwo ){
       self.levelTwo = levelTwo
     }
@@ -277,6 +285,45 @@ class ParentTests: XCTestCase {
     XCTAssert(levelThreeAggregate.levelOne.title == "OccuresInLevelThree")
   }
 
+
+
+  func testThreeLevelsReversedWillSearchUpHierarchies() {
+
+    let levelThreeContainer = DependencyContainer()
+    levelThreeContainer.register {
+      LevelThree(levelTwo: $0)
+      }.resolvingProperties { (container, levelThreeContainer) -> () in
+        levelThreeContainer.anotherLevelTwo = try? container.resolve() as LevelTwo
+    }
+    levelThreeContainer.register {
+      LevelOne(title:"OccuresInLevelThree")
+    }
+
+    levelThreeContainer.register {
+      LevelThreeAggregate(levelThree: $0, levelOne: $1)
+    }
+
+    let levelTwoContainer = DependencyContainer(parent: levelThreeContainer)
+    levelTwoContainer.register {
+      LevelTwo(levelOne: $0)
+    }
+
+    let levelOneContainer = DependencyContainer(parent:levelTwoContainer)
+    levelOneContainer.register { () -> LevelOne in
+      return LevelOne(title:"OccursInLevelOne")
+    }
+
+    guard let levelThreeAggregate = try? levelOneContainer.resolve() as LevelThreeAggregate else {
+      XCTFail("Nil returned from level three aggregate resolve")
+      return
+    }
+
+    XCTAssert(levelThreeAggregate.levelOne === levelThreeAggregate.levelThree.levelTwo.levelOne)
+    XCTAssert(levelThreeAggregate.levelOne.title == "OccursInLevelOne")
+
+  }
+
+
   class LevelThreeInjected {
     let levelThree : LevelThree
     let levelOne = Injected<LevelOne>()
@@ -301,6 +348,9 @@ class ParentTests: XCTestCase {
     let levelTwoContainer = DependencyContainer(parent: levelOneContainer)
     levelTwoContainer.register {
       LevelTwo(levelOne: $0)
+    }.resolvingProperties { (container, levelTwo) -> () in
+      let levelOne = try container.resolve() as LevelOne
+      XCTAssert(levelOne === levelTwo.levelOne)
     }
 
     let levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
@@ -342,9 +392,8 @@ class ParentTests: XCTestCase {
     }
   }
 
-
   /**
-   Protocol forwarding can be  overriden by children.
+   Protocol forwarding can be overriden by children.
    */
   func testOverridingProtocolForwardingIsCapturedCorrectly() {
 
@@ -389,5 +438,104 @@ class ParentTests: XCTestCase {
 
     XCTAssertNoThrow(try childContainer.validate())
   }
+
+  /**
+  * Ensure that when a container itself is used as an implicit dependency it
+  * injects the container that initiated the resolve() call. Additionally ensure that the resolving container
+  * is passed in during calls to Resolvable protocols as well as during resolveProperties() invocations.
+  */
+  func testContainerAsDependenciesAlwaysUsesResolvingContainer(){
+
+    var levelThreeContainer : DependencyContainer!
+
+    let levelOneContainer = DependencyContainer()
+    levelOneContainer.register { (container:DependencyContainer) -> LevelOne in
+      XCTAssert(levelThreeContainer === container)
+      return LevelOne(title:try container.resolve())
+    }
+
+    let levelTwoContainer = DependencyContainer(parent: levelOneContainer)
+    levelTwoContainer.register { (container:DependencyContainer) in
+      XCTAssert(levelThreeContainer === container)
+      return LevelTwo(levelOne: try container.resolve())
+    }.resolvingProperties { (container:DependencyContainer, levelTwo:LevelTwo) in
+      XCTAssert(levelThreeContainer === container)
+      XCTAssert(levelTwo.levelOne === (try container.resolve() as LevelOne))
+    }
+
+    levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
+    levelThreeContainer.register {
+      "OccursInLevelThree"
+    }
+
+    let levelTwo = try? levelThreeContainer.resolve() as LevelTwo
+    XCTAssertNotNil(levelTwo)
+    XCTAssert(levelTwo?.levelOne.title == "OccursInLevelThree")
+
+    XCTAssertNotNil(levelTwo?.resolvedInjectedContainer)
+    XCTAssert(levelThreeContainer === levelTwo?.resolvedInjectedContainer)
+  }
+
+
+  class WireFrame {
+    let title: String
+    let presenter: Presenter
+    let viewController: ViewController
+
+    init(presenter: Presenter, viewController: ViewController, title: String){
+      self.title = title
+      self.presenter = presenter
+      self.viewController = viewController
+    }
+  }
+
+  class Presenter {
+    var wireFrame:  WireFrame?
+    var viewController : ViewController?
+  }
+
+  class ViewController {
+    let presenter: Presenter
+    init(presenter:Presenter){
+      self.presenter = presenter
+
+    }
+  }
+
+  func testReuseWorks() {
+
+    let container = DependencyContainer()
+
+    container.register {
+      ViewController(presenter: $0)
+    }
+
+    container.register {
+      Presenter()
+    }.resolvingProperties { (container, presenter) in
+      presenter.viewController = try container.resolve()
+      presenter.wireFrame = try container.resolve()
+    }
+
+    var count = 0
+    container.register { (presenter: Presenter, viewController: ViewController, title: String) -> WireFrame in
+      print("Here!")
+      count = count + 1
+      return WireFrame(presenter: presenter, viewController: viewController, title: "\(title) : \(count)") as WireFrame
+    }
+
+    let childContainer = DependencyContainer(parent: container)
+
+    childContainer.register {
+      "Title"
+    }
+
+    guard let wireFrame = try? childContainer.resolve() as WireFrame else {
+      XCTFail()
+      return
+    }
+    XCTAssert(wireFrame.presenter.wireFrame === wireFrame)
+  }
+
 
 }

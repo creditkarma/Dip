@@ -135,6 +135,11 @@ extension DependencyContainer {
   
   /// Lookup definition by the key and use it to resolve instance. Fallback to the key with `nil` tag.
   func _resolve<T>(key aKey: DefinitionKey, builder: (_Definition) throws -> T) throws -> T {
+
+    if aKey.type == DependencyContainer.self {
+      return (context.inCollaboration ? self : context.container) as! T
+    }
+
     guard let matching = self.definition(matching: aKey) else {
       do {
         return try autowire(key: aKey)
@@ -184,7 +189,7 @@ extension DependencyContainer {
     //when builder calls factory it will in turn resolve sub-dependencies (if there are any)
     //when it returns instance that we try to resolve here can be already resolved
     //so we return it, throwing away instance created by previous call to builder
-    if let previouslyResolved: T = previouslyResolved(for: definition, key: key) {
+    if let previouslyResolved: T = context.container.previouslyResolved(for: definition, key: key) {
       log(level: .Verbose, "Reusing previously resolved instance \(previouslyResolved)")
       return previouslyResolved
     }
@@ -193,14 +198,18 @@ extension DependencyContainer {
     
     if let resolvable = resolvedInstance as? Resolvable {
       resolvedInstances.resolvableInstances.append(resolvable)
-      resolvable.resolveDependencies(self)
+      resolvable.resolveDependencies(context.inCollaboration ? self : context.container)
     }
     
     try autoInjectProperties(in: resolvedInstance)
-    try definition.resolveProperties(of: resolvedInstance, container: self)
-    
+    try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
+
     log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)")
     return resolvedInstance
+  }
+
+  private enum InternalError : Error {
+    case noPreviouslyResolvedFound
   }
   
   private func previouslyResolved<T>(for definition: _Definition, key: DefinitionKey) -> T? {
@@ -217,6 +226,21 @@ extension DependencyContainer {
         return previouslyResolved
       }
     }
+
+    if let parent = parent {
+      if let previouslyResolvedInParent : T = try? parent.inContext(key: key,
+                       injectedInType: self.context.injectedInType,
+                       container: context.container,
+                       block: { () -> T in
+                        if let p: T = parent.previouslyResolved(for: definition, key: key) {
+                          return p
+                        }
+                        throw InternalError.noPreviouslyResolvedFound
+        }) {
+          return previouslyResolvedInParent
+      }
+    }
+
     return nil
   }
   
