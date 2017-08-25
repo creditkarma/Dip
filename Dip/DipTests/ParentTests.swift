@@ -285,45 +285,6 @@ class ParentTests: XCTestCase {
     XCTAssert(levelThreeAggregate.levelOne.title == "OccuresInLevelThree")
   }
 
-
-
-  func testThreeLevelsReversedWillSearchUpHierarchies() {
-
-    let levelThreeContainer = DependencyContainer()
-    levelThreeContainer.register {
-      LevelThree(levelTwo: $0)
-      }.resolvingProperties { (container, levelThreeContainer) -> () in
-        levelThreeContainer.anotherLevelTwo = try? container.resolve() as LevelTwo
-    }
-    levelThreeContainer.register {
-      LevelOne(title:"OccuresInLevelThree")
-    }
-
-    levelThreeContainer.register {
-      LevelThreeAggregate(levelThree: $0, levelOne: $1)
-    }
-
-    let levelTwoContainer = DependencyContainer(parent: levelThreeContainer)
-    levelTwoContainer.register {
-      LevelTwo(levelOne: $0)
-    }
-
-    let levelOneContainer = DependencyContainer(parent:levelTwoContainer)
-    levelOneContainer.register { () -> LevelOne in
-      return LevelOne(title:"OccursInLevelOne")
-    }
-
-    guard let levelThreeAggregate = try? levelOneContainer.resolve() as LevelThreeAggregate else {
-      XCTFail("Nil returned from level three aggregate resolve")
-      return
-    }
-
-    XCTAssert(levelThreeAggregate.levelOne === levelThreeAggregate.levelThree.levelTwo.levelOne)
-    XCTAssert(levelThreeAggregate.levelOne.title == "OccursInLevelOne")
-
-  }
-
-
   class LevelThreeInjected {
     let levelThree : LevelThree
     let levelOne = Injected<LevelOne>()
@@ -439,10 +400,28 @@ class ParentTests: XCTestCase {
     XCTAssertNoThrow(try childContainer.validate())
   }
 
+  class TestInjected<T> : AutoInjectedPropertyBox {
+    ///The type of wrapped property.
+    public static var wrappedType: Any.Type {
+      return T.self
+    }
+
+    var containerUsedInResolve : DependencyContainer?
+
+    func resolve(_ container: DependencyContainer) throws {
+      containerUsedInResolve = container
+    }
+  }
+
+  class LevelTwoInjected {
+    let levelOne = TestInjected<LevelOne>()
+  }
+  
+
   /**
   * Ensure that when a container itself is used as an implicit dependency it
   * injects the container that initiated the resolve() call. Additionally ensure that the resolving container
-  * is passed in during calls to Resolvable protocols as well as during resolveProperties() invocations.
+  * is passed in during calls to Resolvable protocols, resolveProperties { ... } invocations and Injected<T> properties
   */
   func testContainerAsDependenciesAlwaysUsesResolvingContainer(){
 
@@ -463,10 +442,13 @@ class ParentTests: XCTestCase {
       XCTAssert(levelTwo.levelOne === (try container.resolve() as LevelOne))
     }
 
+    levelTwoContainer.register { LevelTwoInjected() }
+
     levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
     levelThreeContainer.register {
       "OccursInLevelThree"
     }
+
 
     let levelTwo = try? levelThreeContainer.resolve() as LevelTwo
     XCTAssertNotNil(levelTwo)
@@ -474,7 +456,17 @@ class ParentTests: XCTestCase {
 
     XCTAssertNotNil(levelTwo?.resolvedInjectedContainer)
     XCTAssert(levelThreeContainer === levelTwo?.resolvedInjectedContainer)
+
+
+    guard let levelTwoInjected = try? levelThreeContainer.resolve() as LevelTwoInjected else {
+      XCTFail("Failed to create LevelTwoInjected")
+      return
   }
+
+    XCTAssertTrue(levelTwoInjected.levelOne.containerUsedInResolve === levelThreeContainer)
+
+  }
+
 
 
   class WireFrame {
