@@ -24,7 +24,7 @@
 
 protocol AutoWiringDefinition: DefinitionType {
   var numberOfArguments: Int { get }
-  var autoWiringFactory: ((DependencyContainer, DependencyContainer.Tag?) throws -> Any)? { get }
+  var autoWiringFactory: ((DependencyContainer, DefinitionKey) throws -> Any)? { get }
 }
 
 extension DependencyContainer {
@@ -41,7 +41,7 @@ extension DependencyContainer {
     do {
       let key = autoWiringKey.tagged(with: key.tag ?? context.tag)
       return try _resolve(key: key) { definition in
-        try definition.autoWiringFactory!(self.context.container, key.tag) as! T
+        try definition.autoWiringFactory!(self.context.container, key) as! T
       }
     }
     catch {

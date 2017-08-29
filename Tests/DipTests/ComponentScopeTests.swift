@@ -63,8 +63,7 @@ class ComponentScopeTests: XCTestCase {
       ("testThatItReusesInstanceInSharedScopeResolvedForNilTag", testThatItReusesInstanceInSharedScopeResolvedForNilTag),
       ("testThatItReusesResolvedInstanceWhenResolvingOptional", testThatItReusesResolvedInstanceWhenResolvingOptional),
       ("testThatItHoldsWeakReferenceToWeakSingletonInstance", testThatItHoldsWeakReferenceToWeakSingletonInstance),
-      ("testThatItResolvesWeakSingletonAgainAfterItWasReleased", testThatItResolvesWeakSingletonAgainAfterItWasReleased),
-      ("testThatCollaboratingContainersReuseSingletonsResolvedByAnotherContainer", testThatCollaboratingContainersReuseSingletonsResolvedByAnotherContainer)
+      ("testThatItResolvesWeakSingletonAgainAfterItWasReleased", testThatItResolvesWeakSingletonAgainAfterItWasReleased)
     ]
   }()
   
@@ -348,29 +347,6 @@ class ComponentScopeTests: XCTestCase {
     
     //then
     AssertNoThrow(expression: try container.resolve() as Service, "Weak singleton should be resolved again.")
-  }
-  
-  func testThatCollaboratingContainersReuseSingletonsResolvedByAnotherContainer() {
-    func test(_ scope: ComponentScope, line: UInt = #line) {
-      let container1 = DependencyContainer()
-      container1.register(scope) { ServiceImp1() as Service }
-      
-      let container2 = DependencyContainer()
-      container1.collaborate(with: container2)
-      container2.collaborate(with: container1)
-      
-      try! container1.bootstrap()
-      try! container2.bootstrap()
-      
-      let service1 = try! container1.resolve() as Service
-      let service2 = try! container2.resolve() as Service
-      
-      XCTAssertTrue(service1 === service2, "\(scope) should be reused when first resolved from another container", line: line)
-    }
-    
-    test(.singleton)
-    test(.weakSingleton)
-    test(.eagerSingleton)
   }
   
 }

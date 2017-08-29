@@ -232,7 +232,8 @@ class RuntimeArgumentsTests: XCTestCase {
     //when
     let service1 = try! container.resolve(arguments: arg1) as Service
     let service2 = try! container.resolve(arguments: arg2) as Service
-    
+
+
     //then
     XCTAssertTrue(service1 is ServiceImp1)
     XCTAssertTrue(service2 is ServiceImp2)

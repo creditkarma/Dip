@@ -137,17 +137,13 @@ extension DependencyContainer {
   func _resolve<T>(key aKey: DefinitionKey, builder: (_Definition) throws -> T) throws -> T {
 
     if aKey.type == DependencyContainer.self {
-      return (context.inCollaboration ? self : context.container) as! T
+      return (context.container) as! T
     }
 
     guard let matching = self.definition(matching: aKey) else {
       do {
         return try autowire(key: aKey)
       } catch {
-        //Try to resolve using Collaboratino first.
-        if let resolved = collaboratingResolve(key: aKey, builder: builder) {
-          return resolved
-        }
 
         //Now try to reoslve using parent child relationships.
         if let resolved = parentResolve(key: aKey, builder: builder) {
@@ -189,7 +185,7 @@ extension DependencyContainer {
     //when builder calls factory it will in turn resolve sub-dependencies (if there are any)
     //when it returns instance that we try to resolve here can be already resolved
     //so we return it, throwing away instance created by previous call to builder
-    if let previouslyResolved: T = previouslyResolved(for: definition, key: key) {
+    if let previouslyResolved: T = context.container.previouslyResolved(for: definition, key: key) {
       log(level: .Verbose, "Reusing previously resolved instance \(previouslyResolved)")
       return previouslyResolved
     }
@@ -198,17 +194,21 @@ extension DependencyContainer {
     
     if let resolvable = resolvedInstance as? Resolvable {
       resolvedInstances.resolvableInstances.append(resolvable)
-      resolvable.resolveDependencies(context.inCollaboration ? self : context.container)
+      resolvable.resolveDependencies(context.container)
     }
     
     try autoInjectProperties(in: resolvedInstance)
-    try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
+    try definition.resolveProperties(of: resolvedInstance, container: context.container)
     
     log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)")
     return resolvedInstance
   }
   
-  private func previouslyResolved<T>(for definition: _Definition, key: DefinitionKey) -> T? {
+  private enum InternalError : Error {
+    case noPreviouslyResolvedFound
+  }
+  
+  internal func previouslyResolved<T>(for definition: _Definition, key: DefinitionKey) -> T? {
     //first check if exact key was already resolved
     if let previouslyResolved = resolvedInstances[key: key, inScope: definition.scope, context: context] as? T {
       return previouslyResolved
@@ -222,6 +222,22 @@ extension DependencyContainer {
         return previouslyResolved
       }
     }
+
+    //Search the parent for resolved instances.
+    if let parent = parent {
+      if let previouslyResolvedInParent : T = try? parent.inContext(key: key,
+                       injectedInType: self.context.injectedInType,
+                       container: context.container,
+                       block: { () -> T in
+                        if let p: T = parent.previouslyResolved(for: definition, key: key) {
+                          return p
+                        }
+                        throw InternalError.noPreviouslyResolvedFound
+        }) {
+          return previouslyResolvedInParent
+      }
+    }
+
     return nil
   }
   
@@ -249,27 +265,17 @@ class ResolvedInstances {
   var resolvableInstances = [Resolvable]()
   
   //singletons are stored using reference type wrapper to be able to share them between containers
-  var sharedSingletonsBox = Box<[DefinitionKey: Any]>([:])
-  var sharedSingletons: [DefinitionKey: Any] {
-    get { return sharedSingletonsBox.unboxed }
-    set { sharedSingletonsBox.unboxed = newValue }
-  }
   var singletons = [DefinitionKey: Any]()
   
-  var sharedWeakSingletonsBox = Box<[DefinitionKey: Any]>([:])
-  var sharedWeakSingletons: [DefinitionKey: Any] {
-    get { return sharedWeakSingletonsBox.unboxed }
-    set { sharedWeakSingletonsBox.unboxed = newValue }
-  }
   var weakSingletons = [DefinitionKey: Any]()
   
   subscript(key key: DefinitionKey, inScope scope: ComponentScope, context context: DependencyContainer.Context) -> Any? {
     get {
       switch scope {
       case .singleton, .eagerSingleton:
-        return context.inCollaboration ? sharedSingletons[key] : singletons[key]
+        return  singletons[key]
       case .weakSingleton:
-        let singletons = context.inCollaboration ? sharedWeakSingletons : weakSingletons
+        let singletons = weakSingletons
         if let boxed = singletons[key] as? WeakBoxType { return boxed.unboxed }
         else { return singletons[key] }
       case .shared:
@@ -281,10 +287,8 @@ class ResolvedInstances {
     set {
       switch scope {
       case .singleton, .eagerSingleton:
-        sharedSingletons[key] = newValue
         singletons[key] = newValue
       case .weakSingleton:
-        sharedWeakSingletons[key] = newValue
         weakSingletons[key] = newValue
       case .shared:
         resolvedInstances[key] = newValue

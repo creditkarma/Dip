@@ -109,7 +109,6 @@ class AutoInjectionTests: XCTestCase {
       ("testThatItResolvesTaggedAutoInjectedProperties", testThatItResolvesTaggedAutoInjectedProperties),
       ("testThatItPassesTagToAutoInjectedProperty", testThatItPassesTagToAutoInjectedProperty),
       ("testThatItDoesNotPassTagToAutoInjectedPropertyWithExplicitTag", testThatItDoesNotPassTagToAutoInjectedPropertyWithExplicitTag),
-      ("testThatItAutoInjectsPropertyWithCollaboratingContainer", testThatItAutoInjectsPropertyWithCollaboratingContainer)
     ]
   }()
 
@@ -359,19 +358,6 @@ class AutoInjectionTests: XCTestCase {
     XCTAssertNotNil(taggedServer)
     XCTAssertNotNil(nilTaggedServer)
   }
-  
-  func testThatItAutoInjectsPropertyWithCollaboratingContainer() {
-    let collaborator = DependencyContainer()
-    collaborator.register { ServerImp() as Server }
-    container.register { ClientImp() as Client }
-    
-    container.collaborate(with: collaborator)
-    collaborator.collaborate(with: container)
-    
-    let client = try! container.resolve() as Client
-    let server = client.server
-    XCTAssertTrue(client === server?.client)
-  }
-  
+
 }
 

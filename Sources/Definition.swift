@@ -138,7 +138,7 @@ public final class Definition<T, U>: DefinitionType {
   
   //MARK: - AutoWiringDefinition
   
-  var autoWiringFactory: ((DependencyContainer, DependencyContainer.Tag?) throws -> Any)?
+  var autoWiringFactory: ((DependencyContainer, DefinitionKey) throws -> Any)?
   var numberOfArguments: Int = 0
   
   //MARK: - TypeForwardingDefinition
@@ -237,7 +237,7 @@ class DefinitionBuilder<T, U> {
   var factory: F!
   
   var numberOfArguments: Int = 0
-  var autoWiringFactory: ((DependencyContainer, DependencyContainer.Tag?) throws -> T)?
+  var autoWiringFactory: ((DependencyContainer, DefinitionKey) throws -> T)?
   
   var forwardsTo: _Definition?
   

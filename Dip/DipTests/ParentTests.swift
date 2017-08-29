@@ -182,12 +182,14 @@ class ParentTests: XCTestCase {
   class LevelTwo : Resolvable{
     let levelOne : LevelOne
     var resolvedInjectedContainer : DependencyContainer?
+    var resolveCount = 0
 
     init(levelOne : LevelOne ){
       self.levelOne = levelOne
     }
 
     func resolveDependencies(_ container: DependencyContainer){
+      resolveCount = resolveCount + 1
       resolvedInjectedContainer = container
     }
   }
@@ -449,6 +451,7 @@ class ParentTests: XCTestCase {
       "OccursInLevelThree"
     }
 
+  
 
     let levelTwo = try? levelThreeContainer.resolve() as LevelTwo
     XCTAssertNotNil(levelTwo)
@@ -461,10 +464,122 @@ class ParentTests: XCTestCase {
     guard let levelTwoInjected = try? levelThreeContainer.resolve() as LevelTwoInjected else {
       XCTFail("Failed to create LevelTwoInjected")
       return
-    }
+  }
 
     XCTAssertTrue(levelTwoInjected.levelOne.containerUsedInResolve === levelThreeContainer)
 
   }
+
+
+
+  class WireFrame {
+    let title: String
+    let presenter: Presenter
+    let viewController: ViewController
+
+    init(presenter: Presenter, viewController: ViewController, title: String){
+      self.title = title
+      self.presenter = presenter
+      self.viewController = viewController
+    }
+  }
+
+  class Presenter {
+    var wireFrame:  WireFrame?
+    var viewController : ViewController?
+  }
+
+  class ViewController {
+    let presenter: Presenter
+    init(presenter:Presenter){
+      self.presenter = presenter
+
+    }
+  }
+
+  /**
+  * Attempting to resolve from a child container may be resolved in a parent container several time.
+  * This value should be reused where appropriate.
+  */
+
+  func testReusedDependenciesFoundInParentContainers() {
+
+    let container = DependencyContainer()
+
+    container.register {
+      ViewController(presenter: $0)
+    }
+
+    container.register {
+      Presenter()
+    }.resolvingProperties { (container, presenter) in
+      presenter.viewController = try container.resolve()
+      presenter.wireFrame = try container.resolve()
+    }
+
+    var count = 0
+    container.register { (presenter: Presenter, viewController: ViewController, title: String) -> WireFrame in
+      count = count + 1
+      return WireFrame(presenter: presenter, viewController: viewController, title: "\(title):\(count)") as WireFrame
+    }
+
+    let childContainer = DependencyContainer(parent: container)
+    childContainer.register {
+      "Title"
+    }
+
+    guard let wireFrame = try? childContainer.resolve() as WireFrame else {
+      XCTFail()
+      return
+    }
+    XCTAssert(wireFrame.presenter.wireFrame === wireFrame)
+    XCTAssert(count == 1)
+    XCTAssertEqual("Title:1", wireFrame.title)
+  }
+
+
+
+  func testOnlyResolveOnceWhenResolvedByChild(){
+
+    var count = 0
+    let rootContainer = DependencyContainer()
+    rootContainer.register { () -> LevelOne in
+      count = count + 1
+      return LevelOne(title: "OccursInRoot")
+    }
+
+    let childContainer = DependencyContainer(parent: rootContainer)
+    childContainer.register { (instanceOne : LevelOne, instanceTwo : LevelOne) -> LevelTwo in
+      XCTAssert(instanceOne === instanceTwo)
+      return LevelTwo(levelOne: instanceOne)
+    }
+
+    let levelTwo : LevelTwo? = try? childContainer.resolve()
+    XCTAssertNotNil(levelTwo)
+    XCTAssertEqual(count, 1)
+    XCTAssertEqual(levelTwo?.resolveCount, 1)
+  }
+
+  func testOnlyResolveOnceWhenResolvedByParent() {
+
+    var count = 0
+    let rootContainer = DependencyContainer()
+    rootContainer.register { () -> LevelOne in
+      count = count + 1
+      return LevelOne(title: "OccursInRoot")
+    }
+
+    rootContainer.register { (instanceOne : LevelOne, instanceTwo : LevelOne) -> LevelTwo in
+      XCTAssert(instanceOne === instanceTwo)
+      return LevelTwo(levelOne: instanceOne)
+    }
+
+    let childContainer = DependencyContainer(parent: rootContainer)
+    let levelTwo : LevelTwo? = try? childContainer.resolve()
+    XCTAssertNotNil(levelTwo)
+    XCTAssertEqual(count, 1)
+    XCTAssertEqual(levelTwo?.resolveCount, 1)
+  }
+  
 
 }

@@ -47,16 +47,6 @@ public final class DependencyContainer {
   let parent: DependencyContainer?
   var bootstrapped = false
   var bootstrapQueue: [() throws -> ()] = []
-  
-  private var _weakCollaborators: [WeakBox<DependencyContainer>] = []
-  var _collaborators: [DependencyContainer] {
-    get {
-      return _weakCollaborators.flatMap({ $0.value })
-    }
-    set {
-      _weakCollaborators = newValue.filter({ $0 !== self }).map(WeakBox.init)
-    }
-  }
 
   /**
    Designated initializer for a DependencyContainer
@@ -173,15 +163,12 @@ extension DependencyContainer {
     /// The Container that triggered the initial resolve
     private(set) public var container: DependencyContainer
     
-    let inCollaboration: Bool
-    
     var logErrors: Bool = true
     
-    init(key: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String?, inCollaboration: Bool, container: DependencyContainer) {
+    init(key: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String?, container: DependencyContainer) {
       self.key = key
       self.injectedInType = injectedInType
       self.injectedInProperty = injectedInProperty
-      self.inCollaboration = inCollaboration
       self.container = container
     }
     
@@ -217,10 +204,6 @@ extension DependencyContainer {
         //clean instances pool if it is owned not by other container
         if context == nil {
           resolvedInstances.resolvedInstances.removeAll()
-          for (key, instance) in resolvedInstances.sharedWeakSingletons {
-            if resolvedInstances.sharedWeakSingletons[key] is WeakBoxType { continue }
-            resolvedInstances.sharedWeakSingletons[key] = WeakBox(instance)
-          }
           for (key, instance) in resolvedInstances.weakSingletons {
             if resolvedInstances.weakSingletons[key] is WeakBoxType { continue }
             resolvedInstances.weakSingletons[key] = WeakBox(instance)
@@ -237,7 +220,6 @@ extension DependencyContainer {
         key: key,
         injectedInType: injectedInType,
         injectedInProperty: injectedInProperty,
-        inCollaboration: inCollaboration,
         container: container
       )
       context.logErrors = logErrors ?? currentContext?.logErrors ?? true
@@ -254,103 +236,6 @@ extension DependencyContainer {
 
 }
 
-//MARK: - Collaborating containers
-
-extension DependencyContainer {
-  
-  /**
-   Adds collaborating containers as weak references. Circular references are allowed.
-   References to the container itself are ignored.
-   */
-  public func collaborate(with containers: DependencyContainer...) {
-    collaborate(with: containers)
-  }
-  
-  /**
-   Adds collaborating containers as weak references. Circular references are allowed.
-   References to the container itself are ignored.
-   */
-  public func collaborate(with containers: [DependencyContainer]) {
-    _collaborators += containers
-    for container in containers {
-      container._collaborators += [self]
-      container.resolvedInstances.sharedSingletonsBox = self.resolvedInstances.sharedSingletonsBox
-      container.resolvedInstances.sharedWeakSingletonsBox = self.resolvedInstances.sharedWeakSingletonsBox
-      updateCollaborationReferences(between: container, and: self)
-    }
-  }
-  
-  private func updateCollaborationReferences(between container: DependencyContainer, and collaborator: DependencyContainer) {
-    for container in container._collaborators {
-      guard container.resolvedInstances.sharedSingletonsBox !== collaborator.resolvedInstances.sharedSingletonsBox else { continue }
-      container.resolvedInstances.sharedSingletonsBox = collaborator.resolvedInstances.sharedSingletonsBox
-      container.resolvedInstances.sharedWeakSingletonsBox = collaborator.resolvedInstances.sharedWeakSingletonsBox
-      updateCollaborationReferences(between: container, and: collaborator)
-    }
-  }
-  
-  /// Tries to resolve key using collaborating containers
-  func collaboratingResolve<T>(key aKey: DefinitionKey, builder: (_Definition) throws -> T) -> T? {
-    let key = aKey
-    for collaborator in _collaborators {
-      //if container is already in a context resolving this type
-      //it means that it has been already called to resolve this type,
-      //so there is probably a cercular reference between containers.
-      //To break it skip this container
-      if let context = collaborator.context, context.resolvingType == key.type && context.tag == key.tag { continue }
-      
-      do {
-        //Pass current container's instances pool to collect instances resolved by collaborator
-        let resolvedInstances = collaborator.resolvedInstances
-        collaborator.resolvedInstances = self.resolvedInstances
-        //Set collaborator context to preserve current container context
-        let context = collaborator.context
-        collaborator.context = self.context
-        defer {
-          collaborator.context = context
-          collaborator.resolvedInstances = resolvedInstances
-          
-          //get back singletons and shared instances registered in collaborator
-          //and resolved during collaboration, so that they can be reused again later
-          if let matched = collaborator.definition(matching: aKey) as? _Definition {
-            switch matched.scope {
-            case .singleton, .eagerSingleton:
-              collaborator.resolvedInstances.singletons[aKey] = self.resolvedInstances.singletons[aKey]
-            case .weakSingleton:
-              collaborator.resolvedInstances.weakSingletons[aKey] = self.resolvedInstances.weakSingletons[aKey]
-            case .shared:
-              collaborator.resolvedInstances.resolvedInstances[aKey] = self.resolvedInstances.resolvedInstances[aKey]
-            case .unique:
-              break
-            }
-          }
-
-          for (key, resolvedSingleton) in self.resolvedInstances.singletons {
-            collaborator.resolvedInstances.singletons[aKey] = resolvedSingleton
-          }
-          for (_, resolvedSingleton) in self.resolvedInstances.weakSingletons {
-            guard collaborator.definition(matching: aKey) != nil else { continue }
-            collaborator.resolvedInstances.weakSingletons[aKey] = WeakBox(resolvedSingleton)
-          }
-          for (_, resolved) in self.resolvedInstances.resolvedInstances {
-            guard collaborator.definition(matching: aKey) != nil else { continue }
-            collaborator.resolvedInstances.resolvedInstances[aKey] = resolved
-          }
-        }
-
-
-        let resolved = try collaborator.inContext(key:key, injectedInType: self.context.injectedInType, injectedInProperty: self.context.injectedInProperty, inCollaboration: true, container: self.context.container, logErrors: false) {
-          try collaborator._resolve(key: key, builder: builder)
-        }
-
-        return resolved
-      }
-      catch { }
-    }
-    return nil
-  }
-
-}
 
 // MARK: - Parent Child resolving 
 
@@ -366,19 +251,22 @@ extension DependencyContainer {
     let resolved = try? parent.inContext(key:aKey,
                                          injectedInType: self.context.injectedInType,
                                          injectedInProperty: self.context.injectedInProperty,
-                                         inCollaboration: self.context.inCollaboration,
                                          container: self.context.container,
                                          logErrors: false,
                                          block: { () throws -> T in
 
-          //Store previously rsolved instances from parent
-          let resolvedInstance = parent.resolvedInstances.resolvedInstances
 
-          //Use currently resolved instances being generated by the current call to resolve()
-          parent.resolvedInstances.resolvedInstances = self.context.container.resolvedInstances.resolvedInstances
+          //Merge the parent and the childs resolved instances together before attempting to resolve in the parent
+          let parentResolvedInstances = parent.resolvedInstances.resolvedInstances
+          var childResolvedInstances = self.context.container.resolvedInstances.resolvedInstances
+          parentResolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
+            childResolvedInstances[key] = value
+          })
+
+          parent.resolvedInstances.resolvedInstances = childResolvedInstances
           defer {
             //Restore parents reolved instances.
-            parent.resolvedInstances.resolvedInstances = resolvedInstance
+            parent.resolvedInstances.resolvedInstances = parentResolvedInstances
           }
           do {
             let resolved = try parent._resolve(key: aKey, builder: builder)
@@ -426,8 +314,6 @@ extension DependencyContainer {
       definitions[key] = nil
       resolvedInstances.singletons[key] = nil
       resolvedInstances.weakSingletons[key] = nil
-      resolvedInstances.sharedSingletons[key] = nil
-      resolvedInstances.sharedWeakSingletons[key] = nil
     }
   }
 
@@ -440,8 +326,6 @@ extension DependencyContainer {
       definitions.removeAll()
       resolvedInstances.singletons.removeAll()
       resolvedInstances.weakSingletons.removeAll()
-      resolvedInstances.sharedSingletons.removeAll()
-      resolvedInstances.sharedWeakSingletons.removeAll()
       bootstrapped = false
     }
   }
