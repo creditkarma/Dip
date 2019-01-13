@@ -42,7 +42,7 @@ public final class DependencyContainer {
   internal(set) public var context: Context!
   var definitions = [DefinitionKey: _Definition]()
   var resolvedInstances = ResolvedInstances()
-  private let lock = RecursiveLock()
+  private let lock : RecursiveLock
 
   let parent: DependencyContainer?
   var bootstrapped = false
@@ -82,6 +82,14 @@ public final class DependencyContainer {
    */
   public init(parent: DependencyContainer? = nil,  configBlock: (DependencyContainer)->() = { _ in }) {
     self.parent = parent
+    
+    if let p = parent {
+      self.lock = p.lock
+    } else {
+      self.lock = NSRecursiveLock()
+    }
+    
+    
     configBlock(self)
 
   }
@@ -343,44 +351,41 @@ extension DependencyContainer {
     guard let parent = self.parent else {
       return nil
     }
+    
+    let oldContext = parent.context
+    defer {
+      parent.context = oldContext
+    }
+    parent.context = self.context
+    
 
-    let resolved = try? parent.inContext(key:aKey,
-                                         injectedInType: self.context.injectedInType,
-                                         injectedInProperty: self.context.injectedInProperty,
-                                         inCollaboration: self.context.inCollaboration,
-                                         container: self.context.container,
-                                         logErrors: false,
-                                         block: { () throws -> T in
 
 
-          //Merge the parent and the childs resolved instances together before attempting to resolve in the parent
-          let parentResolvedInstances = parent.resolvedInstances.resolvedInstances
-          var childResolvedInstances = self.context.container.resolvedInstances.resolvedInstances
-          parentResolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
-            childResolvedInstances[key] = value
-          })
-
-          parent.resolvedInstances.resolvedInstances = childResolvedInstances
-          defer {
-            //Restore parents reolved instances.
-            parent.resolvedInstances.resolvedInstances = parentResolvedInstances
-          }
-          do {
-            let resolved = try parent._resolve(key: aKey, builder: builder)
-
-            //Store the resulting resolved instances of this call back into our working context instances.
-            parent.resolvedInstances.resolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
-                self.context.container.resolvedInstances.resolvedInstances[key] = value
-            })
-
-            return resolved
-          } catch {
-            throw error
-          }
+      //Merge the parent and the childs resolved instances together before attempting to resolve in the parent
+      let parentResolvedInstances = parent.resolvedInstances.resolvedInstances
+      var childResolvedInstances = self.context.container.resolvedInstances.resolvedInstances
+      parentResolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
+        childResolvedInstances[key] = value
       })
 
-      return resolved
-    }
+      parent.resolvedInstances.resolvedInstances = childResolvedInstances
+      defer {
+        //Restore parents reolved instances.
+        parent.resolvedInstances.resolvedInstances = parentResolvedInstances
+      }
+      do {
+        let resolved = try parent._resolve(key: aKey, builder: builder)
+
+        //Store the resulting resolved instances of this call back into our working context instances.
+        parent.resolvedInstances.resolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
+            self.context.container.resolvedInstances.resolvedInstances[key] = value
+        })
+
+        return resolved
+      } catch {
+        return nil
+      }
+  }
 }
 
 // MARK: - Removing definitions

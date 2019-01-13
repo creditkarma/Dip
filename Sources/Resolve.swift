@@ -249,12 +249,12 @@ extension DependencyContainer {
 
     //Search the parent for resolved instances.
     if let parent = parent {
-      if let previouslyResolvedInParent : T = parent.inContext(key: key,
-                       injectedInType: self.context.injectedInType,
-                       container: context.container,
-                       block: { () -> T? in
-                        return parent.previouslyResolved(for: definition, key: key)
-        }) {
+      let oldContext = parent.context
+      defer {
+        parent.context = oldContext
+      }
+      parent.context = self.context
+      if let previouslyResolvedInParent : T = parent.previouslyResolved(for: definition, key: key) {
           return previouslyResolvedInParent
       }
     }
