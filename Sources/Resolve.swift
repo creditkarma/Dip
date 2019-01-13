@@ -163,11 +163,11 @@ extension DependencyContainer {
   
   /// Lookup definition by the key and use it to resolve instance. Fallback to the key with `nil` tag.
   func _resolve<T>(key aKey: DefinitionKey, builder: (_Definition) throws -> T) throws -> T {
-
+    
     if aKey.type == DependencyContainer.self {
       return (context.inCollaboration ? self : context.container) as! T
     }
-
+    
     guard let matching = self.definition(matching: aKey) else {
       do {
         return try autowire(key: aKey)
@@ -176,12 +176,12 @@ extension DependencyContainer {
         if let resolved = collaboratingResolve(key: aKey, builder: builder) {
           return resolved
         }
-
+        
         //Now try to reoslve using parent child relationships.
         if let resolved = parentResolve(key: aKey, builder: builder) {
-            return resolved
+          return resolved
         }
-
+        
         throw error
       }
     }
@@ -210,11 +210,14 @@ extension DependencyContainer {
      That happens because when Optional is casted to Any Swift can not implicitly unwrap it with as operator.
      As a workaround we detect boxing here and unwrap it so that we return not a box, but wrapped instance.
      */
-
+    
+    log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)  1.1")
+    
     if let box = resolvedInstance as? BoxType, let unboxedAny = box.unboxed, let unboxed = unboxedAny as? T {
       resolvedInstance = unboxed
     }
     
+    log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)  1.2")
     //when builder calls factory it will in turn resolve sub-dependencies (if there are any)
     //when it returns instance that we try to resolve here can be already resolved
     //so we return it, throwing away instance created by previous call to builder
@@ -223,9 +226,11 @@ extension DependencyContainer {
       return previouslyResolved
     }
     
+    log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)  1.3")
     resolvedInstances[key: key, inScope: definition.scope, context: context] = resolvedInstance
     
-
+    
+    log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)  1.4")
     try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
     
     log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)")
