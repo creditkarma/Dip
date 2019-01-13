@@ -219,7 +219,7 @@ extension DependencyContainer {
     //when it returns instance that we try to resolve here can be already resolved
     //so we return it, throwing away instance created by previous call to builder
     if let previouslyResolved: T = context.container.previouslyResolved(for: definition, key: key) {
-      log(level: .Verbose, "Reusing previously resolved instance \(previouslyResolved)")
+      log(level: .Verbose, "Reusing previously resolved instance 2\(previouslyResolved)")
       return previouslyResolved
     }
     
