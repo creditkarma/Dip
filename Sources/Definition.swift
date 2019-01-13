@@ -133,10 +133,12 @@ public final class Definition<T, U>: DefinitionType {
     
     log(level: .Verbose, "Resolved type  2.2")
     if let forwardsTo = forwardsTo {
+      log(level: .Verbose, "Resolved type  2.2.1")
       try forwardsTo.resolveProperties(of: resolvedInstance, container: container)
     }
     log(level: .Verbose, "Resolved type  2.3")
     if let resolveProperties = self.resolveProperties {
+      log(level: .Verbose, "Resolved type  2.3.1")
       try resolveProperties(container, resolvedInstance)
     }
     log(level: .Verbose, "Resolved type  2.4")
