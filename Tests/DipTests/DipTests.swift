@@ -36,14 +36,7 @@ private protocol Client: class {
   var server: Server! { get }
 }
 
-class ResolvableService: Service, Resolvable {
-  var didResolveDependenciesCalled = false
-  
-  func didResolveDependencies() {
-    XCTAssertFalse(didResolveDependenciesCalled, "didResolveDependencies should be called only once per instance")
-    didResolveDependenciesCalled = true
-  }
-}
+
 
 class DipTests: XCTestCase {
 
@@ -62,11 +55,11 @@ class DipTests: XCTestCase {
       ("testThatItThrowsErrorIfCanNotFindDefinitionForFactoryWithArguments", testThatItThrowsErrorIfCanNotFindDefinitionForFactoryWithArguments),
       ("testThatItThrowsErrorIfConstructorThrows", testThatItThrowsErrorIfConstructorThrows),
       ("testThatItThrowsErrorIfFailsToResolveDependency", testThatItThrowsErrorIfFailsToResolveDependency),
-      ("testThatItCallsDidResolveDependenciesOnResolvableIntance", testThatItCallsDidResolveDependenciesOnResolvableIntance),
-      ("testThatItCallsDidResolveDependenciesInReverseOrder", testThatItCallsDidResolveDependenciesInReverseOrder),
-      ("testItCallsResolveDependenciesOnResolableInstance", testItCallsResolveDependenciesOnResolableInstance),
-      ("testThatItResolvesCircularDependencies", testThatItResolvesCircularDependencies),
-      ("testThatItCanResolveUsingContainersCollaboration", testThatItCanResolveUsingContainersCollaboration),
+     // ("testThatItCallsDidResolveDependenciesOnResolvableIntance", testThatItCallsDidResolveDependenciesOnResolvableIntance),
+   //   ("testThatItCallsDidResolveDependenciesInReverseOrder", testThatItCallsDidResolveDependenciesInReverseOrder),
+ //     ("testItCallsResolveDependenciesOnResolableInstance", testItCallsResolveDependenciesOnResolableInstance),
+  //    ("testThatItResolvesCircularDependencies", testThatItResolvesCircularDependencies),
+   //   ("testThatItCanResolveUsingContainersCollaboration", testThatItCanResolveUsingContainersCollaboration),
       ("testThatCollaboratingWithSelfIsIgnored", testThatCollaboratingWithSelfIsIgnored),
       ("testThatCollaboratingContainersAreWeakReferences", testThatCollaboratingContainersAreWeakReferences),
       ("testThatCollaboratingContainersReuseInstancesResolvedByAnotherContainer", testThatCollaboratingContainersReuseInstancesResolvedByAnotherContainer),
@@ -380,181 +373,181 @@ class DipTests: XCTestCase {
       }
     }
   }
-
-  func testThatItCallsDidResolveDependenciesOnResolvableIntance() {
-    //given
-    container.register { ResolvableService() as Service }
-      .resolvingProperties { _, service in
-        XCTAssertFalse((service as! ResolvableService).didResolveDependenciesCalled, "didResolveDependencies should not be called yet")
-        return
-    }
-
-    container.register(tag: "graph") { ResolvableService() as Service }
-      .resolvingProperties { _, service in
-        XCTAssertFalse((service as! ResolvableService).didResolveDependenciesCalled, "didResolveDependencies should not be called yet")
-        return
-    }
-
-    container.register(.singleton, tag: "singleton") { ResolvableService() as Service }
-      .resolvingProperties { _, service in
-        XCTAssertFalse((service as! ResolvableService).didResolveDependenciesCalled, "didResolveDependencies should not be called yet")
-        return
-    }
-
-    //when
-    let service = try! container.resolve() as Service
-    
-    //then
-    XCTAssertTrue((service as! ResolvableService).didResolveDependenciesCalled)
-
-    //and when
-    let graphService = try! container.resolve(tag: "graph") as Service
-    
-    //then
-    XCTAssertTrue((graphService as! ResolvableService).didResolveDependenciesCalled)
-    
-    //and when
-    let singletonService = try! container.resolve(tag: "singleton") as Service
-    let _ = try! container.resolve(tag: "singleton") as Service
-    
-    //then
-    XCTAssertTrue((singletonService as! ResolvableService).didResolveDependenciesCalled)
-  }
-  
-  func testThatItCallsDidResolveDependenciesInReverseOrder() {
-    
-    class ResolvableService: Service, Resolvable {
-      static var resolved: [Service] = []
-      
-      func didResolveDependencies() {
-        ResolvableService.resolved.append(self)
-      }
-    }
-    
-    //given
-    var resolveDependenciesCalled = false
-    var service2: Service!
-    container.register { ResolvableService() as Service }
-      .resolvingProperties { _, service in
-        if !resolveDependenciesCalled {
-          resolveDependenciesCalled = true
-          service2 = try self.container.resolve() as Service
-        }
-        return
-    }
-
-    //when
-    let service1 = try! container.resolve() as Service
-    
-    //then
-    XCTAssertTrue(ResolvableService.resolved.first === service2)
-    XCTAssertTrue(ResolvableService.resolved.last === service1)
-  }
-  
-  func testItCallsResolveDependenciesOnResolableInstance() {
-    
-    class Class: Resolvable {
-      var resolveDependenciesCalled = false
-      
-      func resolveDependencies(_ container: DependencyContainer) {
-        resolveDependenciesCalled = true
-      }
-    }
-    
-    class SubClass: Class {
-      override func resolveDependencies(_ container: DependencyContainer) {
-        super.resolveDependencies(container)
-      }
-    }
-    
-    container.register { Class() }
-      .resolvingProperties { _, instance in
-        XCTAssertTrue(instance.resolveDependenciesCalled)
-    }
-    
-    container.register { SubClass() }
-      .resolvingProperties { _, instance in
-        XCTAssertTrue(instance.resolveDependenciesCalled)
-    }
-    
-    let _ = try! container.resolve() as Class
-    let _ = try! container.resolve() as SubClass
-  }
-  
-  func testThatItResolvesCircularDependencies() {
-    
-    class ResolvableServer: Server, Resolvable {
-      weak var client: Client!
-      weak var secondClient: Client!
-      
-      init(client: Client) {
-        self.client = client
-      }
-      
-      var didResolveDependenciesCalled = false
-      
-      func didResolveDependencies() {
-        XCTAssertFalse(didResolveDependenciesCalled, "didResolveDependencies should be called only once per instance")
-        didResolveDependenciesCalled = true
-
-        XCTAssertNotNil(self.client)
-        XCTAssertNotNil(self.secondClient)
-        XCTAssertNotNil(self.client?.server)
-        XCTAssertNotNil(self.secondClient)
-        XCTAssertNotNil(self.secondClient?.server)
-      }
-      
-    }
-    
-    class ResolvableClient: Client, Resolvable {
-      var server: Server!
-      var secondServer: Server!
-      
-      var didResolveDependenciesCalled = false
-      
-      func didResolveDependencies() {
-        XCTAssertFalse(didResolveDependenciesCalled, "didResolveDependencies should be called only once per instance")
-        didResolveDependenciesCalled = true
-
-        XCTAssertNotNil(self.server)
-        XCTAssertNotNil(self.secondServer)
-        XCTAssertNotNil(self.server?.client)
-        XCTAssertNotNil(self.secondServer?.client)
-      }
-      
-    }
-
-    //given
-    container.register { try ResolvableServer(client: self.container.resolve()) as Server }
-      .resolvingProperties { (container: DependencyContainer, server: Server) in
-        let server = server as! ResolvableServer
-        server.secondClient = try container.resolve() as Client
-    }
-    
-    container.register { ResolvableClient() as Client }
-      .resolvingProperties { (container: DependencyContainer, client: Client) in
-        let client = client as! ResolvableClient
-        client.server = try container.resolve() as Server
-        client.secondServer = try container.resolve() as Server
-    }
-
-    //when
-    let client = (try! container.resolve() as Client) as! ResolvableClient
-    let server = client.server as! ResolvableServer
-    let secondServer = client.secondServer as! ResolvableServer
-    let secondClient = server.secondClient as! ResolvableClient
-    
-    //then
-    XCTAssertTrue(client === server.client)
-    XCTAssertTrue(client === server.secondClient)
-    XCTAssertTrue(client === secondServer.client)
-    XCTAssertTrue(client === secondServer.secondClient)
-    XCTAssertTrue(client === secondClient)
-    XCTAssertTrue(server === secondServer)
-    
-    XCTAssertTrue(client.didResolveDependenciesCalled)
-    XCTAssertTrue(server.didResolveDependenciesCalled)
-  }
+//
+//  func testThatItCallsDidResolveDependenciesOnResolvableIntance() {
+//    //given
+//    container.register { ResolvableService() as Service }
+//      .resolvingProperties { _, service in
+//        XCTAssertFalse((service as! ResolvableService).didResolveDependenciesCalled, "didResolveDependencies should not be called yet")
+//        return
+//    }
+//
+//    container.register(tag: "graph") { ResolvableService() as Service }
+//      .resolvingProperties { _, service in
+//        XCTAssertFalse((service as! ResolvableService).didResolveDependenciesCalled, "didResolveDependencies should not be called yet")
+//        return
+//    }
+//
+//    container.register(.singleton, tag: "singleton") { ResolvableService() as Service }
+//      .resolvingProperties { _, service in
+//        XCTAssertFalse((service as! ResolvableService).didResolveDependenciesCalled, "didResolveDependencies should not be called yet")
+//        return
+//    }
+//
+//    //when
+//    let service = try! container.resolve() as Service
+//
+//    //then
+//    XCTAssertTrue((service as! ResolvableService).didResolveDependenciesCalled)
+//
+//    //and when
+//    let graphService = try! container.resolve(tag: "graph") as Service
+//
+//    //then
+//    XCTAssertTrue((graphService as! ResolvableService).didResolveDependenciesCalled)
+//
+//    //and when
+//    let singletonService = try! container.resolve(tag: "singleton") as Service
+//    let _ = try! container.resolve(tag: "singleton") as Service
+//
+//    //then
+//    XCTAssertTrue((singletonService as! ResolvableService).didResolveDependenciesCalled)
+//  }
+//
+//  func testThatItCallsDidResolveDependenciesInReverseOrder() {
+//
+//    class ResolvableService: Service, Resolvable {
+//      static var resolved: [Service] = []
+//
+//      func didResolveDependencies() {
+//        ResolvableService.resolved.append(self)
+//      }
+//    }
+//
+//    //given
+//    var resolveDependenciesCalled = false
+//    var service2: Service!
+//    container.register { ResolvableService() as Service }
+//      .resolvingProperties { _, service in
+//        if !resolveDependenciesCalled {
+//          resolveDependenciesCalled = true
+//          service2 = try self.container.resolve() as Service
+//        }
+//        return
+//    }
+//
+//    //when
+//    let service1 = try! container.resolve() as Service
+//
+//    //then
+//    XCTAssertTrue(ResolvableService.resolved.first === service2)
+//    XCTAssertTrue(ResolvableService.resolved.last === service1)
+//  }
+//
+//  func testItCallsResolveDependenciesOnResolableInstance() {
+//
+//    class Class: Resolvable {
+//      var resolveDependenciesCalled = false
+//
+//      func resolveDependencies(_ container: DependencyContainer) {
+//        resolveDependenciesCalled = true
+//      }
+//    }
+//
+//    class SubClass: Class {
+//      override func resolveDependencies(_ container: DependencyContainer) {
+//        super.resolveDependencies(container)
+//      }
+//    }
+//
+//    container.register { Class() }
+//      .resolvingProperties { _, instance in
+//        XCTAssertTrue(instance.resolveDependenciesCalled)
+//    }
+//
+//    container.register { SubClass() }
+//      .resolvingProperties { _, instance in
+//        XCTAssertTrue(instance.resolveDependenciesCalled)
+//    }
+//
+//    let _ = try! container.resolve() as Class
+//    let _ = try! container.resolve() as SubClass
+//  }
+//
+//  func testThatItResolvesCircularDependencies() {
+//
+//    class ResolvableServer: Server, Resolvable {
+//      weak var client: Client!
+//      weak var secondClient: Client!
+//
+//      init(client: Client) {
+//        self.client = client
+//      }
+//
+//      var didResolveDependenciesCalled = false
+//
+//      func didResolveDependencies() {
+//        XCTAssertFalse(didResolveDependenciesCalled, "didResolveDependencies should be called only once per instance")
+//        didResolveDependenciesCalled = true
+//
+//        XCTAssertNotNil(self.client)
+//        XCTAssertNotNil(self.secondClient)
+//        XCTAssertNotNil(self.client?.server)
+//        XCTAssertNotNil(self.secondClient)
+//        XCTAssertNotNil(self.secondClient?.server)
+//      }
+//
+//    }
+//
+//    class ResolvableClient: Client, Resolvable {
+//      var server: Server!
+//      var secondServer: Server!
+//
+//      var didResolveDependenciesCalled = false
+//
+//      func didResolveDependencies() {
+//        XCTAssertFalse(didResolveDependenciesCalled, "didResolveDependencies should be called only once per instance")
+//        didResolveDependenciesCalled = true
+//
+//        XCTAssertNotNil(self.server)
+//        XCTAssertNotNil(self.secondServer)
+//        XCTAssertNotNil(self.server?.client)
+//        XCTAssertNotNil(self.secondServer?.client)
+//      }
+//
+//    }
+//
+//    //given
+//    container.register { try ResolvableServer(client: self.container.resolve()) as Server }
+//      .resolvingProperties { (container: DependencyContainer, server: Server) in
+//        let server = server as! ResolvableServer
+//        server.secondClient = try container.resolve() as Client
+//    }
+//
+//    container.register { ResolvableClient() as Client }
+//      .resolvingProperties { (container: DependencyContainer, client: Client) in
+//        let client = client as! ResolvableClient
+//        client.server = try container.resolve() as Server
+//        client.secondServer = try container.resolve() as Server
+//    }
+//
+//    //when
+//    let client = (try! container.resolve() as Client) as! ResolvableClient
+//    let server = client.server as! ResolvableServer
+//    let secondServer = client.secondServer as! ResolvableServer
+//    let secondClient = server.secondClient as! ResolvableClient
+//
+//    //then
+//    XCTAssertTrue(client === server.client)
+//    XCTAssertTrue(client === server.secondClient)
+//    XCTAssertTrue(client === secondServer.client)
+//    XCTAssertTrue(client === secondServer.secondClient)
+//    XCTAssertTrue(client === secondClient)
+//    XCTAssertTrue(server === secondServer)
+//
+//    XCTAssertTrue(client.didResolveDependenciesCalled)
+//    XCTAssertTrue(server.didResolveDependenciesCalled)
+//  }
   
   func testThatItValidatesConfiguration() {
     //given
@@ -655,21 +648,21 @@ class DipTests: XCTestCase {
 
 extension DipTests {
 
-  func testThatItCanResolveUsingContainersCollaboration() {
-    //given
-    let collaborator = DependencyContainer()
-    collaborator.register { ResolvableService() as Service }
-    container.register { "something" }
-
-    //when
-    container.collaborate(with: collaborator)
-    
-    //then
-    AssertNoThrow(expression: try container.resolve() as Service)
-    AssertNoThrow(expression: try container.resolve(Service.self))
-    AssertNoThrow(expression: try collaborator.resolve() as String)
-    AssertNoThrow(expression: try collaborator.resolve(String.self))
-  }
+//  func testThatItCanResolveUsingContainersCollaboration() {
+//    //given
+//    let collaborator = DependencyContainer()
+//    collaborator.register { ResolvableService() as Service }
+//    container.register { "something" }
+//
+//    //when
+//    container.collaborate(with: collaborator)
+//
+//    //then
+//    AssertNoThrow(expression: try container.resolve() as Service)
+//    AssertNoThrow(expression: try container.resolve(Service.self))
+//    AssertNoThrow(expression: try collaborator.resolve() as String)
+//    AssertNoThrow(expression: try collaborator.resolve(String.self))
+//  }
   
   func testThatCollaboratingWithSelfIsIgnored() {
     let collaborator = DependencyContainer()
@@ -733,43 +726,43 @@ extension DipTests {
     XCTAssertTrue(client?.server === (client as? ClientImp)?.anotherServer)
   }
   
-  func testThatCollaborationReferencesAreRecursivelyUpdate() {
-    let container = DependencyContainer()
-    container.register(.singleton){ ResolvableService() as Service }
-    
-    //when
-    let collaborator1 = DependencyContainer()
-    let collaborator2 = DependencyContainer()
-    let collaborator3 = DependencyContainer()
-    let collaborator4 = DependencyContainer()
-    
-    collaborator1.collaborate(with: container)
-    XCTAssertTrue(collaborator1.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
-
-    collaborator2.collaborate(with: container)
-    XCTAssertTrue(collaborator2.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
-
-    collaborator3.collaborate(with: collaborator1)
-    XCTAssertTrue(collaborator3.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
-
-    collaborator4.collaborate(with: collaborator2)
-    XCTAssertTrue(collaborator4.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
-    
-    let service1 = try! collaborator1.resolve() as Service
-    let service2 = try! collaborator2.resolve() as Service
-    let service3 = try! collaborator3.resolve() as Service
-    let service4 = try! collaborator4.resolve() as Service
-    let serviceRoot = try! container.resolve() as Service
-    
-    XCTAssertTrue(service1 === service2)
-    XCTAssertTrue(service1 === service3)
-    XCTAssertTrue(service1 === service4)
-    
-    XCTAssertTrue(service1 === serviceRoot)
-    XCTAssertTrue(service2 === serviceRoot)
-    XCTAssertTrue(service3 === serviceRoot)
-    XCTAssertTrue(service4 === serviceRoot)
-  }
+//  func testThatCollaborationReferencesAreRecursivelyUpdate() {
+//    let container = DependencyContainer()
+//    container.register(.singleton){ ResolvableService() as Service }
+//
+//    //when
+//    let collaborator1 = DependencyContainer()
+//    let collaborator2 = DependencyContainer()
+//    let collaborator3 = DependencyContainer()
+//    let collaborator4 = DependencyContainer()
+//
+//    collaborator1.collaborate(with: container)
+//    XCTAssertTrue(collaborator1.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
+//
+//    collaborator2.collaborate(with: container)
+//    XCTAssertTrue(collaborator2.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
+//
+//    collaborator3.collaborate(with: collaborator1)
+//    XCTAssertTrue(collaborator3.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
+//
+//    collaborator4.collaborate(with: collaborator2)
+//    XCTAssertTrue(collaborator4.resolvedInstances.sharedSingletonsBox === container.resolvedInstances.sharedSingletonsBox)
+//
+//    let service1 = try! collaborator1.resolve() as Service
+//    let service2 = try! collaborator2.resolve() as Service
+//    let service3 = try! collaborator3.resolve() as Service
+//    let service4 = try! collaborator4.resolve() as Service
+//    let serviceRoot = try! container.resolve() as Service
+//
+//    XCTAssertTrue(service1 === service2)
+//    XCTAssertTrue(service1 === service3)
+//    XCTAssertTrue(service1 === service4)
+//
+//    XCTAssertTrue(service1 === serviceRoot)
+//    XCTAssertTrue(service2 === serviceRoot)
+//    XCTAssertTrue(service3 === serviceRoot)
+//    XCTAssertTrue(service4 === serviceRoot)
+//  }
 
   class RootService {}
   class ServiceClient {

@@ -179,18 +179,13 @@ class ParentTests: XCTestCase {
 
   }
 
-  class LevelTwo : Resolvable{
+  class LevelTwo {
     let levelOne : LevelOne
     var resolvedInjectedContainer : DependencyContainer?
     var resolveCount = 0
 
     init(levelOne : LevelOne ){
       self.levelOne = levelOne
-    }
-
-    func resolveDependencies(_ container: DependencyContainer){
-      resolveCount = resolveCount + 1
-      resolvedInjectedContainer = container
     }
   }
 

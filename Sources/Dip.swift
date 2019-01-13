@@ -225,11 +225,7 @@ extension DependencyContainer {
             if resolvedInstances.weakSingletons[key] is WeakBoxType { continue }
             resolvedInstances.weakSingletons[key] = WeakBox(instance)
           }
-          
-          for resolvedInstance in resolvedInstances.resolvableInstances.reversed() {
-            resolvedInstance.didResolveDependencies()
-          }
-          resolvedInstances.resolvableInstances.removeAll()
+        
         }
       }
       

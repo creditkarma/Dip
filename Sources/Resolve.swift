@@ -211,7 +211,6 @@ extension DependencyContainer {
      As a workaround we detect boxing here and unwrap it so that we return not a box, but wrapped instance.
      */
 
-    let resolvedDescription = String(reflecting: resolvedInstance)
     if let box = resolvedInstance as? BoxType, let unboxedAny = box.unboxed, let unboxed = unboxedAny as? T {
       resolvedInstance = unboxed
     }
@@ -226,10 +225,6 @@ extension DependencyContainer {
     
     resolvedInstances[key: key, inScope: definition.scope, context: context] = resolvedInstance
     
-    if let resolvable = resolvedInstance as? Resolvable {
-      resolvedInstances.resolvableInstances.append(resolvable)
-      resolvable.resolveDependencies(context.inCollaboration ? self : context.container)
-    }
 
     try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
     
@@ -288,7 +283,6 @@ extension DependencyContainer {
 class ResolvedInstances {
   
   var resolvedInstances = [DefinitionKey: Any]()
-  var resolvableInstances = [Resolvable]()
   
   //singletons are stored using reference type wrapper to be able to share them between containers
   var sharedSingletonsBox = Box<[DefinitionKey: Any]>([:])
@@ -340,18 +334,3 @@ class ResolvedInstances {
   
 }
 
-//MARK: - Resolvable
-
-/// Resolvable protocol provides some extension points for resolving dependencies with property injection.
-public protocol Resolvable {
-  /// This method will be called right after instance is created by the container.
-  func resolveDependencies(_ container: DependencyContainer)
-  /// This method will be called when all dependencies of the instance are resolved.
-  /// When resolving objects graph the last resolved instance will receive this callback first.
-  func didResolveDependencies()
-}
-
-extension Resolvable {
-  func resolveDependencies(_ container: DependencyContainer) {}
-  func didResolveDependencies() {}
-}
