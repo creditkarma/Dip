@@ -24,37 +24,6 @@
 
 extension DependencyContainer {
   
-  /**
-   Resolves properties of passed object wrapped with `Injected<T>` or `InjectedWeak<T>`
-   */
-  func autoInjectProperties(in instance: Any) throws {
-    let mirror = Mirror(reflecting: instance)
-    
-    //mirror only contains class own properties
-    //so we need to walk through super class mirrors
-    //to resolve super class auto-injected properties
-    var superClassMirror = mirror.superclassMirror
-    while superClassMirror != nil {
-      try superClassMirror?.children.forEach(resolveChild)
-      superClassMirror = superClassMirror?.superclassMirror
-    }
-
-    try mirror.children.forEach(resolveChild)
-  }
-  
-  private func resolveChild(child: Mirror.Child) throws {
-    //HOTFIX for https://bugs.swift.org/browse/SR-2282
-//    guard !String(describing: type(of: child.value)).has(prefix: "Optional") else { return }
-    guard !String(describing: type(of: child.value)).has(prefix: "ImplicitlyUnwrappedOptional") else { return }
-    guard let injectedPropertyBox = child.value as? AutoInjectedPropertyBox else { return }
-    
-    let wrappedType = type(of: injectedPropertyBox).wrappedType
-    let contextKey = DefinitionKey(type: wrappedType, typeOfArguments: Void.self, tag: context.tag)
-    try inContext(key:contextKey, injectedInType: context?.resolvingType, injectedInProperty: child.label, container: self.context.container, logErrors: false) {
-      try injectedPropertyBox.resolve(context.container)
-    }
-  }
-  
 }
 
 /**

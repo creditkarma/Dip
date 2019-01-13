@@ -231,10 +231,6 @@ extension DependencyContainer {
       resolvable.resolveDependencies(context.inCollaboration ? self : context.container)
     }
 
-    if !resolvedDescription.contains("OCMock") {
-      try autoInjectProperties(in: resolvedInstance)
-    }
-
     try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
     
     log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)")
