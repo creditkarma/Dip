@@ -233,7 +233,7 @@ extension DependencyContainer {
     log(level: .Verbose, "Resolved type   1.4")
     try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
     
-    log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)")
+    log(level: .Verbose, "Resolved type   1.5")
     return resolvedInstance
   }
 
