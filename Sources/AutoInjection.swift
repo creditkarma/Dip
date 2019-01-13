@@ -80,59 +80,59 @@ public protocol AutoInjectedPropertyBox: class {
  - seealso: `InjectedWeak`
 
 */
-public final class Injected<T>: _InjectedPropertyBox<T>, AutoInjectedPropertyBox {
-  
-  ///The type of wrapped property.
-  public static var wrappedType: Any.Type {
-    return T.self
-  }
-
-  ///Wrapped value.
-  public internal(set) var value: T? {
-    didSet {
-      if let value = value { didInject(value) }
-    }
-  }
-
-  init(value: T?, required: Bool = true, tag: DependencyTagConvertible?, overrideTag: Bool, didInject: @escaping (T) -> ()) {
-    self.value = value
-    super.init(required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
-  }
-
-  /**
-   Creates a new wrapper for auto-injected property.
-   
-   - parameters:
-      - required: Defines if the property is required or not.
-                  If container fails to inject required property it will als fail to resolve
-                  the instance that defines that property. Default is `true`.
-      - tag: An optional tag to use to lookup definitions when injecting this property. Default is `nil`.
-      - didInject: Block that will be called when concrete instance is injected in this property.
-                   Similar to `didSet` property observer. Default value does nothing.
-   */
-  public convenience init(required: Bool = true, didInject: @escaping (T) -> () = { _ in }) {
-    self.init(value: nil, required: required, tag: nil, overrideTag: false, didInject: didInject)
-  }
-  
-  public convenience init(required: Bool = true, tag: DependencyTagConvertible?, didInject: @escaping (T) -> () = { _ in }) {
-    self.init(value: nil, required: required, tag: tag, overrideTag: true, didInject: didInject)
-  }
-
-  public func resolve(_ container: DependencyContainer) throws {
-    let resolved: T? = try super.resolve(with: container)
-    value = resolved
-  }
-
-  /// Returns a new wrapper with provided value.
-  public func setValue(_ value: T?) -> Injected {
-    guard (required && value != nil) || !required else {
-      fatalError("Can not set required property to nil.")
-    }
-    
-    return Injected(value: value, required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
-  }
-
-}
+//public final class Injected<T>: _InjectedPropertyBox<T>, AutoInjectedPropertyBox {
+//
+//  ///The type of wrapped property.
+//  public static var wrappedType: Any.Type {
+//    return T.self
+//  }
+//
+//  ///Wrapped value.
+//  public internal(set) var value: T? {
+//    didSet {
+//      if let value = value { didInject(value) }
+//    }
+//  }
+//
+//  init(value: T?, required: Bool = true, tag: DependencyTagConvertible?, overrideTag: Bool, didInject: @escaping (T) -> ()) {
+//    self.value = value
+//    super.init(required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
+//  }
+//
+//  /**
+//   Creates a new wrapper for auto-injected property.
+//
+//   - parameters:
+//      - required: Defines if the property is required or not.
+//                  If container fails to inject required property it will als fail to resolve
+//                  the instance that defines that property. Default is `true`.
+//      - tag: An optional tag to use to lookup definitions when injecting this property. Default is `nil`.
+//      - didInject: Block that will be called when concrete instance is injected in this property.
+//                   Similar to `didSet` property observer. Default value does nothing.
+//   */
+//  public convenience init(required: Bool = true, didInject: @escaping (T) -> () = { _ in }) {
+//    self.init(value: nil, required: required, tag: nil, overrideTag: false, didInject: didInject)
+//  }
+//
+//  public convenience init(required: Bool = true, tag: DependencyTagConvertible?, didInject: @escaping (T) -> () = { _ in }) {
+//    self.init(value: nil, required: required, tag: tag, overrideTag: true, didInject: didInject)
+//  }
+//
+//  public func resolve(_ container: DependencyContainer) throws {
+//    let resolved: T? = try super.resolve(with: container)
+//    value = resolved
+//  }
+//
+//  /// Returns a new wrapper with provided value.
+//  public func setValue(_ value: T?) -> Injected {
+//    guard (required && value != nil) || !required else {
+//      fatalError("Can not set required property to nil.")
+//    }
+//
+//    return Injected(value: value, required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
+//  }
+//
+//}
 
 /**
  Use this wrapper to identify _weak_ properties of the instance that should be
@@ -163,108 +163,108 @@ public final class Injected<T>: _InjectedPropertyBox<T>, AutoInjectedPropertyBox
  - seealso: `Injected`
  
  */
-public final class InjectedWeak<T>: _InjectedPropertyBox<T>, AutoInjectedPropertyBox {
-
-  //Only classes (means AnyObject) can be used as `weak` properties
-  //but we can not make <T: AnyObject> because that will prevent using protocol as generic type
-  //so we just rely on user reading documentation and passing AnyObject in runtime
-  //also we will throw fatal error if type can not be casted to AnyObject during resolution.
-
-  ///The type of wrapped property.
-  public static var wrappedType: Any.Type {
-    return T.self
-  }
-
-  var valueBox: WeakBox<T>? = nil {
-    didSet {
-      if let value = value { didInject(value) }
-    }
-  }
-  
-  ///Wrapped value.
-  public var value: T? {
-    return valueBox?.value
-  }
-
-  init(value: T?, required: Bool = true, tag: DependencyTagConvertible?, overrideTag: Bool, didInject: @escaping (T) -> ()) {
-    self.valueBox = value.map(WeakBox.init)
-    super.init(required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
-  }
-  
-  /**
-   Creates a new wrapper for weak auto-injected property.
-   
-   - parameters:
-      - required: Defines if the property is required or not.
-                  If container fails to inject required property it will als fail to resolve
-                  the instance that defines that property. Default is `true`.
-      - tag: An optional tag to use to lookup definitions when injecting this property. Default is `nil`.
-      - didInject: Block that will be called when concrete instance is injected in this property.
-                   Similar to `didSet` property observer. Default value does nothing.
-   */
-  public convenience init(required: Bool = true, didInject: @escaping (T) -> () = { _ in }) {
-    self.init(value: nil, required: required, tag: nil, overrideTag: false, didInject: didInject)
-  }
-  
-  public convenience init(required: Bool = true, tag: DependencyTagConvertible?, didInject: @escaping (T) -> () = { _ in }) {
-    self.init(value: nil, required: required, tag: tag, overrideTag: true, didInject: didInject)
-  }
-  
-  public func resolve(_ container: DependencyContainer) throws {
-    let resolved: T? = try super.resolve(with: container)
-    valueBox = resolved.map(WeakBox.init)
-  }
-
-  /// Returns a new wrapper with provided value.
-  public func setValue(_ value: T?) -> InjectedWeak {
-    guard (required && value != nil) || !required else {
-      fatalError("Can not set required property to nil.")
-    }
-    
-    return InjectedWeak(value: value, required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
-  }
-
-}
-
-class _InjectedPropertyBox<T> {
-
-  let required: Bool
-  let didInject: (T) -> ()
-  let tag: DependencyContainer.Tag?
-  let overrideTag: Bool
-
-  init(required: Bool = true, tag: DependencyTagConvertible?, overrideTag: Bool, didInject: @escaping (T) -> () = { _ in }) {
-    self.required = required
-    self.tag = tag?.dependencyTag
-    self.overrideTag = overrideTag
-    self.didInject = didInject
-  }
-
-  func resolve(with container: DependencyContainer) throws -> T? {
-    let tag = overrideTag ? self.tag : container.context.tag
-    do {
-      container.context.key = container.context.key.tagged(with: tag)
-      let key = DefinitionKey(type: T.self, typeOfArguments: Void.self, tag: tag?.dependencyTag)
-      return try resolve(with: container, key: key, builder: { (factory: (Any) throws -> Any) in try factory(()) }) as? T
-    }
-    catch {
-        let error = DipError.autoInjectionFailed(label: container.context.injectedInProperty, type: container.context.resolvingType, underlyingError: error)
-      if required {
-        throw error
-      }
-      else {
-        log(level: .Errors, error)
-        return nil
-      }
-    }
-  }
-  
-  private func resolve<U>(with container: DependencyContainer, key: DefinitionKey, builder: ((U) throws -> Any) throws -> Any) throws -> Any {
-    return try container._resolve(key: key, builder: { definition throws -> Any in
-      try builder(definition.weakFactory)
-    })
-  }
-  
-}
-
+//public final class InjectedWeak<T>: _InjectedPropertyBox<T>, AutoInjectedPropertyBox {
+//
+//  //Only classes (means AnyObject) can be used as `weak` properties
+//  //but we can not make <T: AnyObject> because that will prevent using protocol as generic type
+//  //so we just rely on user reading documentation and passing AnyObject in runtime
+//  //also we will throw fatal error if type can not be casted to AnyObject during resolution.
+//
+//  ///The type of wrapped property.
+//  public static var wrappedType: Any.Type {
+//    return T.self
+//  }
+//
+//  var valueBox: WeakBox<T>? = nil {
+//    didSet {
+//      if let value = value { didInject(value) }
+//    }
+//  }
+//  
+//  ///Wrapped value.
+//  public var value: T? {
+//    return valueBox?.value
+//  }
+//
+//  init(value: T?, required: Bool = true, tag: DependencyTagConvertible?, overrideTag: Bool, didInject: @escaping (T) -> ()) {
+//    self.valueBox = value.map(WeakBox.init)
+//    super.init(required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
+//  }
+//  
+//  /**
+//   Creates a new wrapper for weak auto-injected property.
+//   
+//   - parameters:
+//      - required: Defines if the property is required or not.
+//                  If container fails to inject required property it will als fail to resolve
+//                  the instance that defines that property. Default is `true`.
+//      - tag: An optional tag to use to lookup definitions when injecting this property. Default is `nil`.
+//      - didInject: Block that will be called when concrete instance is injected in this property.
+//                   Similar to `didSet` property observer. Default value does nothing.
+//   */
+//  public convenience init(required: Bool = true, didInject: @escaping (T) -> () = { _ in }) {
+//    self.init(value: nil, required: required, tag: nil, overrideTag: false, didInject: didInject)
+//  }
+//  
+//  public convenience init(required: Bool = true, tag: DependencyTagConvertible?, didInject: @escaping (T) -> () = { _ in }) {
+//    self.init(value: nil, required: required, tag: tag, overrideTag: true, didInject: didInject)
+//  }
+//  
+//  public func resolve(_ container: DependencyContainer) throws {
+//    let resolved: T? = try super.resolve(with: container)
+//    valueBox = resolved.map(WeakBox.init)
+//  }
+//
+//  /// Returns a new wrapper with provided value.
+//  public func setValue(_ value: T?) -> InjectedWeak {
+//    guard (required && value != nil) || !required else {
+//      fatalError("Can not set required property to nil.")
+//    }
+//    
+//    return InjectedWeak(value: value, required: required, tag: tag, overrideTag: overrideTag, didInject: didInject)
+//  }
+//
+//}
+//
+//class _InjectedPropertyBox<T> {
+//
+//  let required: Bool
+//  let didInject: (T) -> ()
+//  let tag: DependencyContainer.Tag?
+//  let overrideTag: Bool
+//
+//  init(required: Bool = true, tag: DependencyTagConvertible?, overrideTag: Bool, didInject: @escaping (T) -> () = { _ in }) {
+//    self.required = required
+//    self.tag = tag?.dependencyTag
+//    self.overrideTag = overrideTag
+//    self.didInject = didInject
+//  }
+//
+//  func resolve(with container: DependencyContainer) throws -> T? {
+//    let tag = overrideTag ? self.tag : container.context.tag
+//    do {
+//      container.context.key = container.context.key.tagged(with: tag)
+//      let key = DefinitionKey(type: T.self, typeOfArguments: Void.self, tag: tag?.dependencyTag)
+//      return try resolve(with: container, key: key, builder: { (factory: (Any) throws -> Any) in try factory(()) }) as? T
+//    }
+//    catch {
+//        let error = DipError.autoInjectionFailed(label: container.context.injectedInProperty, type: container.context.resolvingType, underlyingError: error)
+//      if required {
+//        throw error
+//      }
+//      else {
+//        log(level: .Errors, error)
+//        return nil
+//      }
+//    }
+//  }
+//  
+//  private func resolve<U>(with container: DependencyContainer, key: DefinitionKey, builder: ((U) throws -> Any) throws -> Any) throws -> Any {
+//    return try container._resolve(key: key, builder: { definition throws -> Any in
+//      try builder(definition.weakFactory)
+//    })
+//  }
+//  
+//}
+//
 

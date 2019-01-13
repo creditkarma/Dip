@@ -27,11 +27,11 @@ import XCTest
 
 private protocol Service {}
 private class ServiceImp1: Service {
-  let injected = Injected<ServiceImp2>()
-  let injectedWeak = InjectedWeak<ServiceImp2>()
-  let taggedInjected = Injected<ServiceImp2>(tag: "injectedTag")
-  let taggedInjectedWeak = InjectedWeak<ServiceImp2>(tag: "injectedTag")
-  let injectedNilTag = Injected<ServiceImp2>(tag: nil)
+//  let injected = Injected<ServiceImp2>()
+//  let injectedWeak = InjectedWeak<ServiceImp2>()
+//  let taggedInjected = Injected<ServiceImp2>(tag: "injectedTag")
+//  let taggedInjectedWeak = InjectedWeak<ServiceImp2>(tag: "injectedTag")
+//  let injectedNilTag = Injected<ServiceImp2>(tag: nil)
 }
 private class ServiceImp2: Service {}
 

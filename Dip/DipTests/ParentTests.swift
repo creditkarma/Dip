@@ -181,8 +181,6 @@ class ParentTests: XCTestCase {
 
   class LevelTwo {
     let levelOne : LevelOne
-    var resolvedInjectedContainer : DependencyContainer?
-    var resolveCount = 0
 
     init(levelOne : LevelOne ){
       self.levelOne = levelOne
@@ -284,8 +282,7 @@ class ParentTests: XCTestCase {
 
   class LevelThreeInjected {
     let levelThree : LevelThree
-    let levelOne = Injected<LevelOne>()
-
+ 
     init(levelThree: LevelThree) {
       self.levelThree = levelThree
     }
@@ -329,9 +326,9 @@ class ParentTests: XCTestCase {
       XCTFail("Nil returned from level three aggregate resolve")
       return
     }
-
-    XCTAssert(levelThreeInjected.levelOne.value?.title  == "OccuresInLevelThree")
-    XCTAssert(levelThreeInjected.levelThree.levelTwo.levelOne === levelThreeInjected.levelOne.value)
+//
+//    XCTAssert(levelThreeInjected.levelOne.value?.title  == "OccuresInLevelThree")
+//    XCTAssert(levelThreeInjected.levelThree.levelTwo.levelOne === levelThreeInjected.levelOne.value)
   }
 
   class DependancyX{}
@@ -348,7 +345,7 @@ class ParentTests: XCTestCase {
 
 
   class ConcreteA {
-    let servicable = Injected<Servicable>()
+    //let servicable = Injected<Servicable>()
   }
 
   class ConcreteB {
@@ -423,7 +420,7 @@ class ParentTests: XCTestCase {
     //Resolving with the child should always use overridden values.
     var concreteA: ConcreteA? = try? childContainer.resolve()
     XCTAssertNotNil(concreteA)
-    XCTAssertNotNil(concreteA?.servicable.value as? DependancyB)
+  //  XCTAssertNotNil(concreteA?.servicable.value as? DependancyB)
 
     let concreteB: ConcreteB? = try? childContainer.resolve()
     XCTAssertNotNil(concreteB)
@@ -434,7 +431,7 @@ class ParentTests: XCTestCase {
     //REsolving directly to the root should only access classes its registered with.
     concreteA = try? rootContainer.resolve()
     XCTAssertNotNil(concreteA)
-    XCTAssertNotNil(concreteA?.servicable.value as? DependancyA)//Note: root still references DependancyA
+ //   XCTAssertNotNil(concreteA?.servicable.value as? DependancyA)//Note: root still references DependancyA
 
     //Root container should not have access to dependancies registered in children
     XCTAssertNil(try? rootContainer.resolve())
@@ -498,16 +495,13 @@ class ParentTests: XCTestCase {
     XCTAssertNotNil(levelTwo)
     XCTAssert(levelTwo?.levelOne.title == "OccursInLevelThree")
 
-    XCTAssertNotNil(levelTwo?.resolvedInjectedContainer)
-    XCTAssert(levelThreeContainer === levelTwo?.resolvedInjectedContainer)
-
 
     guard let levelTwoInjected = try? levelThreeContainer.resolve() as LevelTwoInjected else {
       XCTFail("Failed to create LevelTwoInjected")
       return
     }
 
-    XCTAssertTrue(levelTwoInjected.levelOne.containerUsedInResolve === levelThreeContainer)
+//    XCTAssertTrue(levelTwoInjected.levelOne.containerUsedInResolve === levelThreeContainer)
 
   }
 
@@ -598,7 +592,6 @@ class ParentTests: XCTestCase {
     let levelTwo : LevelTwo? = try? childContainer.resolve()
     XCTAssertNotNil(levelTwo)
     XCTAssertEqual(count, 1)
-    XCTAssertEqual(levelTwo?.resolveCount, 1)
   }
 
   /**
@@ -623,6 +616,5 @@ class ParentTests: XCTestCase {
     let levelTwo : LevelTwo? = try? childContainer.resolve()
     XCTAssertNotNil(levelTwo)
     XCTAssertEqual(count, 1)
-    XCTAssertEqual(levelTwo?.resolveCount, 1)
   }
 }
