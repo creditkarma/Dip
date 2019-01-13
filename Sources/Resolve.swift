@@ -211,13 +211,11 @@ extension DependencyContainer {
      As a workaround we detect boxing here and unwrap it so that we return not a box, but wrapped instance.
      */
     
-    log(level: .Verbose, "Resolved type  1.1")
     
     if let box = resolvedInstance as? BoxType, let unboxedAny = box.unboxed, let unboxed = unboxedAny as? T {
       resolvedInstance = unboxed
     }
     
-    log(level: .Verbose, "Resolved type   1.2")
     //when builder calls factory it will in turn resolve sub-dependencies (if there are any)
     //when it returns instance that we try to resolve here can be already resolved
     //so we return it, throwing away instance created by previous call to builder
@@ -226,14 +224,11 @@ extension DependencyContainer {
       return previouslyResolved
     }
     
-    log(level: .Verbose, "Resolved type 1.3")
     resolvedInstances[key: key, inScope: definition.scope, context: context] = resolvedInstance
     
-    
-    log(level: .Verbose, "Resolved type   1.4")
     try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
     
-    log(level: .Verbose, "Resolved type   1.5")
+    log(level: .Verbose, "Resolved type \(key.type)")
     return resolvedInstance
   }
 

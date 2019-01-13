@@ -128,20 +128,14 @@ public final class Definition<T, U>: DefinitionType {
   /// Calls `resolveDependencies` block if it was set.
   func resolveProperties(of instance: Any, container: DependencyContainer) throws {
     
-    log(level: .Verbose, "Resolved type  2.1")
     guard let resolvedInstance = instance as? T else { return }
     
-    log(level: .Verbose, "Resolved type  2.2")
     if let forwardsTo = forwardsTo {
-      log(level: .Verbose, "Resolved type  2.2.1")
       try forwardsTo.resolveProperties(of: resolvedInstance, container: container)
     }
-    log(level: .Verbose, "Resolved type  2.3")
     if let resolveProperties = self.resolveProperties {
-      log(level: .Verbose, "Resolved type  2.3.1")
       try resolveProperties(container, resolvedInstance)
     }
-    log(level: .Verbose, "Resolved type  2.4")
   }
   
   //MARK: - AutoWiringDefinition
