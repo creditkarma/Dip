@@ -441,23 +441,6 @@ class ParentTests: XCTestCase {
     XCTAssertNoThrow(try childContainer.validate())
   }
 
-  class TestInjected<T> : AutoInjectedPropertyBox {
-    ///The type of wrapped property.
-    public static var wrappedType: Any.Type {
-      return T.self
-    }
-
-    var containerUsedInResolve : DependencyContainer?
-
-    func resolve(_ container: DependencyContainer) throws {
-      containerUsedInResolve = container
-    }
-  }
-
-  class LevelTwoInjected {
-    let levelOne = TestInjected<LevelOne>()
-  }
-  
 
   /**
   * Ensure that when a container itself is used as an implicit dependency it
@@ -483,7 +466,6 @@ class ParentTests: XCTestCase {
       XCTAssert(levelTwo.levelOne === (try container.resolve() as LevelOne))
     }
 
-    levelTwoContainer.register { LevelTwoInjected() }
 
     levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
     levelThreeContainer.register {
@@ -494,12 +476,12 @@ class ParentTests: XCTestCase {
     let levelTwo = try? levelThreeContainer.resolve() as LevelTwo
     XCTAssertNotNil(levelTwo)
     XCTAssert(levelTwo?.levelOne.title == "OccursInLevelThree")
-
-
-    guard let levelTwoInjected = try? levelThreeContainer.resolve() as LevelTwoInjected else {
-      XCTFail("Failed to create LevelTwoInjected")
-      return
-    }
+//
+//
+//    guard let levelTwoInjected = try? levelThreeContainer.resolve() as LevelTwoInjected else {
+//      XCTFail("Failed to create LevelTwoInjected")
+//      return
+//    }
 
 //    XCTAssertTrue(levelTwoInjected.levelOne.containerUsedInResolve === levelThreeContainer)
 

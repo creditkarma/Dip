@@ -15,7 +15,6 @@
 		095F829C1D043B41008CD706 /* TypeForwarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095F829B1D043B41008CD706 /* TypeForwarding.swift */; };
 		0982AF0C1C5183A000B62463 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0982AF0B1C5183A000B62463 /* Utils.swift */; };
 		09871B411DAA6BF300B40B91 /* Compatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09871B401DAA6BF300B40B91 /* Compatibility.swift */; };
-		09873F561C1E0237000C02F6 /* AutoInjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09873F551C1E0237000C02F6 /* AutoInjection.swift */; };
 		09B036001C5D2B83001EA5B7 /* AutoWiring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B035FF1C5D2B83001EA5B7 /* AutoWiring.swift */; };
 		09BD350E1D84E30D00B33E53 /* AutoInjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09BD35041D84E30D00B33E53 /* AutoInjectionTests.swift */; };
 		09BD350F1D84E30D00B33E53 /* AutoWiringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09BD35051D84E30D00B33E53 /* AutoWiringTests.swift */; };
@@ -57,7 +56,6 @@
 		095F829B1D043B41008CD706 /* TypeForwarding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TypeForwarding.swift; path = ../../Sources/TypeForwarding.swift; sourceTree = "<group>"; };
 		0982AF0B1C5183A000B62463 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Utils.swift; path = ../../Sources/Utils.swift; sourceTree = "<group>"; };
 		09871B401DAA6BF300B40B91 /* Compatibility.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Compatibility.swift; path = ../../Sources/Compatibility.swift; sourceTree = "<group>"; };
-		09873F551C1E0237000C02F6 /* AutoInjection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AutoInjection.swift; path = ../../Sources/AutoInjection.swift; sourceTree = "<group>"; };
 		09B035FF1C5D2B83001EA5B7 /* AutoWiring.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AutoWiring.swift; path = ../../Sources/AutoWiring.swift; sourceTree = "<group>"; };
 		09BD35041D84E30D00B33E53 /* AutoInjectionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AutoInjectionTests.swift; path = ../../Tests/DipTests/AutoInjectionTests.swift; sourceTree = "<group>"; };
 		09BD35051D84E30D00B33E53 /* AutoWiringTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AutoWiringTests.swift; path = ../../Tests/DipTests/AutoWiringTests.swift; sourceTree = "<group>"; };
@@ -108,7 +106,6 @@
 				0919F4C81C16417000DC3B10 /* Definition.swift */,
 				09FC481C1DAAA8F900566AA8 /* ComponentScope.swift */,
 				0919F4CC1C16417000DC3B10 /* RuntimeArguments.swift */,
-				09873F551C1E0237000C02F6 /* AutoInjection.swift */,
 				09B035FF1C5D2B83001EA5B7 /* AutoWiring.swift */,
 				095F829B1D043B41008CD706 /* TypeForwarding.swift */,
 				0982AF0B1C5183A000B62463 /* Utils.swift */,
@@ -277,7 +274,6 @@
 				09FC480F1DAA9CAF00566AA8 /* Register.swift in Sources */,
 				09FC48071DAA9AC700566AA8 /* Resolve.swift in Sources */,
 				095F829C1D043B41008CD706 /* TypeForwarding.swift in Sources */,
-				09873F561C1E0237000C02F6 /* AutoInjection.swift in Sources */,
 				09FC48181DAAA53100566AA8 /* DipError.swift in Sources */,
 				0919F4D61C16417B00DC3B10 /* RuntimeArguments.swift in Sources */,
 			);

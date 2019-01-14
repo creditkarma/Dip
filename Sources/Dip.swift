@@ -358,33 +358,31 @@ extension DependencyContainer {
     }
     parent.context = self.context
     
+    //Merge the parent and the childs resolved instances together before attempting to resolve in the parent
+    let parentResolvedInstances = parent.resolvedInstances.resolvedInstances
+    var childResolvedInstances = self.context.container.resolvedInstances.resolvedInstances
+    parentResolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
+      childResolvedInstances[key] = value
+    })
 
+    parent.resolvedInstances.resolvedInstances = childResolvedInstances
+    defer {
+      //Restore parents reolved instances.
 
+      parent.resolvedInstances.resolvedInstances = parentResolvedInstances
+    }
+    do {
+      let resolved = try parent._resolve(key: aKey, builder: builder)
 
-      //Merge the parent and the childs resolved instances together before attempting to resolve in the parent
-      let parentResolvedInstances = parent.resolvedInstances.resolvedInstances
-      var childResolvedInstances = self.context.container.resolvedInstances.resolvedInstances
-      parentResolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
-        childResolvedInstances[key] = value
+      //Store the resulting resolved instances of this call back into our working context instances.
+      parent.resolvedInstances.resolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
+          self.context.container.resolvedInstances.resolvedInstances[key] = value
       })
 
-      parent.resolvedInstances.resolvedInstances = childResolvedInstances
-      defer {
-        //Restore parents reolved instances.
-        parent.resolvedInstances.resolvedInstances = parentResolvedInstances
-      }
-      do {
-        let resolved = try parent._resolve(key: aKey, builder: builder)
-
-        //Store the resulting resolved instances of this call back into our working context instances.
-        parent.resolvedInstances.resolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
-            self.context.container.resolvedInstances.resolvedInstances[key] = value
-        })
-
-        return resolved
-      } catch {
-        return nil
-      }
+      return resolved
+    } catch {
+      return nil
+    }
   }
 }
 

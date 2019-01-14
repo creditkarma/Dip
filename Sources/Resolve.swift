@@ -247,17 +247,17 @@ extension DependencyContainer {
       }
     }
 
-    //Search the parent for resolved instances.
-    if let parent = parent {
-      let oldContext = parent.context
-      defer {
-        parent.context = oldContext
-      }
-      parent.context = self.context
-      if let previouslyResolvedInParent : T = parent.previouslyResolved(for: definition, key: key) {
-          return previouslyResolvedInParent
-      }
-    }
+//    //Search the parent for resolved instances.
+//    if let parent = parent {
+//      let oldContext = parent.context
+//      defer {
+//        parent.context = oldContext
+//      }
+//      parent.context = self.context
+//      if let previouslyResolvedInParent : T = parent.previouslyResolved(for: definition, key: key) {
+//          return previouslyResolvedInParent
+//      }
+//    }
 
     return nil
   }
