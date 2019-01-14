@@ -111,8 +111,13 @@ public final class DependencyContainer {
   }
 
   func threadSafe<T>(_ closure: () throws -> T) rethrows -> T {
+    
+    log(level: .Verbose, "Dip: Lock: try")
     lock.lock()
-    defer { lock.unlock() }
+    log(level: .Verbose, "Dip: Lock: enter")
+    defer {
+      log(level: .Verbose, "Dip: Lock: exit")
+      lock.unlock() }
     return try closure()
   }
   
