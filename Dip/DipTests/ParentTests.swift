@@ -181,6 +181,7 @@ class ParentTests: XCTestCase {
 
   class LevelTwo {
     let levelOne : LevelOne
+    var resolvedInjectedContainer : DependencyContainer?
 
     init(levelOne : LevelOne ){
       self.levelOne = levelOne
@@ -280,57 +281,6 @@ class ParentTests: XCTestCase {
     XCTAssert(levelThreeAggregate.levelOne.title == "OccuresInLevelThree")
   }
 
-  class LevelThreeInjected {
-    let levelThree : LevelThree
- 
-    init(levelThree: LevelThree) {
-      self.levelThree = levelThree
-    }
-  }
-
-
-
-  /**
-   Injected properties are captured and overridden by child classes when appropriate.
-   */
-  func testOverridingInjectionProperties() {
-    let levelOneContainer = DependencyContainer()
-    levelOneContainer.register { () -> LevelOne in
-      XCTFail("Should not retrieve")
-      return LevelOne(title:"OccuresInLevelOne")
-    }
-
-    let levelTwoContainer = DependencyContainer(parent: levelOneContainer)
-    levelTwoContainer.register {
-      LevelTwo(levelOne: $0)
-    }.resolvingProperties { (container, levelTwo) -> () in
-      let levelOne = try container.resolve() as LevelOne
-      XCTAssert(levelOne === levelTwo.levelOne)
-    }
-
-    let levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
-    levelThreeContainer.register {
-      LevelThree(levelTwo: $0)
-      }.resolvingProperties { (container, levelThreeContainer) -> () in
-        levelThreeContainer.anotherLevelTwo = try? container.resolve() as LevelTwo
-    }
-    levelThreeContainer.register {
-      LevelOne(title:"OccuresInLevelThree")
-    }
-
-    levelThreeContainer.register {
-      LevelThreeInjected(levelThree: $0)
-    }
-
-    guard let levelThreeInjected = try? levelThreeContainer.resolve() as LevelThreeInjected else {
-      XCTFail("Nil returned from level three aggregate resolve")
-      return
-    }
-//
-//    XCTAssert(levelThreeInjected.levelOne.value?.title  == "OccuresInLevelThree")
-//    XCTAssert(levelThreeInjected.levelThree.levelTwo.levelOne === levelThreeInjected.levelOne.value)
-  }
-
   class DependancyX{}
 
   class DependancyWithInputA : Servicable{
@@ -345,7 +295,10 @@ class ParentTests: XCTestCase {
 
 
   class ConcreteA {
-    //let servicable = Injected<Servicable>()
+    let servicable : Servicable
+    init(servicable : Servicable) {
+      self.servicable = servicable
+    }
   }
 
   class ConcreteB {
@@ -368,8 +321,8 @@ class ParentTests: XCTestCase {
     rootContainer.register { () -> DependancyX in
       DependancyX()
     }
-    rootContainer.register { () -> ConcreteA in
-      ConcreteA()
+    rootContainer.register { (serviceable:Servicable) -> ConcreteA in
+      ConcreteA(servicable:serviceable)
     }
 
     rootContainer.register {
@@ -404,8 +357,8 @@ class ParentTests: XCTestCase {
       DependancyA()
     }.implements(Servicable.self)
 
-    rootContainer.register { () -> ConcreteA in
-      ConcreteA()
+    rootContainer.register { (servicable:Servicable) -> ConcreteA in
+      ConcreteA(servicable:servicable)
     }
 
     let childContainer = DependencyContainer(parent: rootContainer)
@@ -420,7 +373,7 @@ class ParentTests: XCTestCase {
     //Resolving with the child should always use overridden values.
     var concreteA: ConcreteA? = try? childContainer.resolve()
     XCTAssertNotNil(concreteA)
-  //  XCTAssertNotNil(concreteA?.servicable.value as? DependancyB)
+    XCTAssertNotNil(concreteA?.servicable as? DependancyB)
 
     let concreteB: ConcreteB? = try? childContainer.resolve()
     XCTAssertNotNil(concreteB)
@@ -431,7 +384,7 @@ class ParentTests: XCTestCase {
     //REsolving directly to the root should only access classes its registered with.
     concreteA = try? rootContainer.resolve()
     XCTAssertNotNil(concreteA)
- //   XCTAssertNotNil(concreteA?.servicable.value as? DependancyA)//Note: root still references DependancyA
+    XCTAssertNotNil(concreteA?.servicable as? DependancyA)//Note: root still references DependancyA
 
     //Root container should not have access to dependancies registered in children
     XCTAssertNil(try? rootContainer.resolve())
@@ -457,34 +410,30 @@ class ParentTests: XCTestCase {
       return LevelOne(title:try container.resolve())
     }
 
+    var factoryCalled = false
+    var resolvePropertiesCalled = false
+    
     let levelTwoContainer = DependencyContainer(parent: levelOneContainer)
     levelTwoContainer.register { (container:DependencyContainer) in
       XCTAssert(levelThreeContainer === container)
+      factoryCalled = true
       return LevelTwo(levelOne: try container.resolve())
     }.resolvingProperties { (container:DependencyContainer, levelTwo:LevelTwo) in
+      resolvePropertiesCalled = true
       XCTAssert(levelThreeContainer === container)
       XCTAssert(levelTwo.levelOne === (try container.resolve() as LevelOne))
     }
-
 
     levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
     levelThreeContainer.register {
       "OccursInLevelThree"
     }
 
-
     let levelTwo = try? levelThreeContainer.resolve() as LevelTwo
+    XCTAssertTrue(factoryCalled)
+    XCTAssertTrue(resolvePropertiesCalled)
     XCTAssertNotNil(levelTwo)
     XCTAssert(levelTwo?.levelOne.title == "OccursInLevelThree")
-//
-//
-//    guard let levelTwoInjected = try? levelThreeContainer.resolve() as LevelTwoInjected else {
-//      XCTFail("Failed to create LevelTwoInjected")
-//      return
-//    }
-
-//    XCTAssertTrue(levelTwoInjected.levelOne.containerUsedInResolve === levelThreeContainer)
-
   }
 
 
