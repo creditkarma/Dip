@@ -191,10 +191,12 @@ class ParentTests: XCTestCase {
   class LevelThree {
     let levelTwo : LevelTwo
     var anotherLevelTwo : LevelTwo?
+    let levelOne: LevelOne
 
 
-    init(levelTwo : LevelTwo ){
+    init(levelTwo : LevelTwo, levelOne: LevelOne ){
       self.levelTwo = levelTwo
+      self.levelOne = levelOne
     }
   }
 
@@ -213,7 +215,7 @@ class ParentTests: XCTestCase {
 
     let levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
     levelThreeContainer.register {
-      LevelThree(levelTwo: $0)
+      LevelThree(levelTwo: $0, levelOne: $1)
       }.resolvingProperties { (container, levelThreeContainer) -> () in
         levelThreeContainer.anotherLevelTwo = try? container.resolve() as LevelTwo
     }
@@ -260,7 +262,7 @@ class ParentTests: XCTestCase {
 
     let levelThreeContainer = DependencyContainer(parent: levelTwoContainer)
     levelThreeContainer.register {
-      LevelThree(levelTwo: $0)
+      LevelThree(levelTwo: $0, levelOne: $1)
       }.resolvingProperties { (container, levelThreeContainer) -> () in
         levelThreeContainer.anotherLevelTwo = try? container.resolve() as LevelTwo
     }
