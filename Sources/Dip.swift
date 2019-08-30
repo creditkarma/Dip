@@ -45,7 +45,6 @@ public final class DependencyContainer {
   var resolvedInstances = ResolvedInstances()
   private let lock = RecursiveLock()
   
-  let parent: DependencyContainer?
   var bootstrapped = false
   var bootstrapQueue: [() throws -> ()] = []
   
@@ -85,9 +84,8 @@ public final class DependencyContainer {
    
    - returns: A new DependencyContainer.
    */
-  public init(parent: DependencyContainer? = nil, autoInjectProperties: Bool = true, configBlock: (DependencyContainer)->() = { _ in }) {
+  public init(autoInjectProperties: Bool = true, configBlock: (DependencyContainer)->() = { _ in }) {
     self.autoInjectProperties = DependencyContainer.enableAutoInjection ?? autoInjectProperties
-    self.parent = parent
     configBlock(self)
   }
   
@@ -175,19 +173,15 @@ extension DependencyContainer {
     /// The label of the property where resolved instance will be auto-injected.
     private(set) public var injectedInProperty: String?
 
-    /// The Container that triggered the initial resolve
-    private(set) public var container: DependencyContainer
-    
     let inCollaboration: Bool
     
     var logErrors: Bool = true
     
-    init(key: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String?, inCollaboration: Bool, container: DependencyContainer) {
+    init(key: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String?, inCollaboration: Bool) {
       self.key = key
       self.injectedInType = injectedInType
       self.injectedInProperty = injectedInProperty
       self.inCollaboration = inCollaboration
-      self.container = container
     }
     
     public var debugDescription: String {
@@ -211,7 +205,7 @@ extension DependencyContainer {
 
   /// Pushes new context created with provided values and calls block. When block returns previous context is restored.
   /// When popped to initial (root) context will release all references to resolved instances and call `Resolvable` callbacks.
-  func inContext<T>(key aKey: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String? = nil, inCollaboration: Bool = false, container: DependencyContainer, logErrors: Bool! = nil, block: () throws -> T) rethrows -> T {
+  func inContext<T>(key aKey: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String? = nil, inCollaboration: Bool = false, container: DependencyContainer? = nil, logErrors: Bool! = nil, block: () throws -> T) rethrows -> T {
     let key = aKey
     return try threadSafe {
       let currentContext = self.context
@@ -242,8 +236,7 @@ extension DependencyContainer {
         key: key,
         injectedInType: injectedInType,
         injectedInProperty: injectedInProperty,
-        inCollaboration: inCollaboration,
-        container: container
+        inCollaboration: inCollaboration
       )
       context.logErrors = logErrors ?? currentContext?.logErrors ?? true
       
@@ -327,8 +320,8 @@ extension DependencyContainer {
             collaborator.resolvedInstances.resolvedInstances[key] = resolved
           }
         }
-
-        let resolved = try collaborator.inContext(key:key, injectedInType: self.context.injectedInType, injectedInProperty: self.context.injectedInProperty, inCollaboration: true, container: self.context.container, logErrors: false) {
+        
+        let resolved = try collaborator.inContext(key:key, injectedInType: self.context.injectedInType, injectedInProperty: self.context.injectedInProperty, inCollaboration: true, logErrors: false) {
           try collaborator._resolve(key: key, builder: builder)
         }
 
@@ -338,57 +331,7 @@ extension DependencyContainer {
     }
     return nil
   }
-
-}
-
-// MARK: - Parent Child resolving 
-
-extension DependencyContainer {
-
-  //Attempt to resolve the dependency by searching through the parents registry
-  func parentResolve<T>(key aKey: DefinitionKey, builder: (_Definition) throws -> T) -> T? {
-
-    guard let parent = self.parent else {
-      return nil
-    }
-
-    let resolved = try? parent.inContext(key:aKey,
-                                         injectedInType: self.context.injectedInType,
-                                         injectedInProperty: self.context.injectedInProperty,
-                                         inCollaboration: self.context.inCollaboration,
-                                         container: self.context.container,
-                                         logErrors: false,
-                                         block: { () throws -> T in
-
-
-          //Merge the parent and the childs resolved instances together before attempting to resolve in the parent
-          let parentResolvedInstances = parent.resolvedInstances.resolvedInstances
-          var childResolvedInstances = self.context.container.resolvedInstances.resolvedInstances
-          parentResolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
-            childResolvedInstances[key] = value
-          })
-
-          parent.resolvedInstances.resolvedInstances = childResolvedInstances
-          defer {
-            //Restore parents reolved instances.
-            parent.resolvedInstances.resolvedInstances = parentResolvedInstances
-          }
-          do {
-            let resolved = try parent._resolve(key: aKey, builder: builder)
-
-            //Store the resulting resolved instances of this call back into our working context instances.
-            parent.resolvedInstances.resolvedInstances.forEach({ (key: DefinitionKey, value: Any) in
-                self.context.container.resolvedInstances.resolvedInstances[key] = value
-            })
-
-            return resolved
-          } catch {
-            throw error
-          }
-      })
-
-      return resolved
-    }
+  
 }
 
 // MARK: - Removing definitions
@@ -466,7 +409,7 @@ extension DependencyContainer {
         for argumentsSet in arguments {
           guard type(of: argumentsSet) == key.typeOfArguments else { continue }
           do {
-            let _ = try inContext(key:key, injectedInType: nil, container: self) {
+            let _ = try inContext(key:key, injectedInType: nil) {
               try self._resolve(key: key, builder: { definition throws -> Any in
                 try definition.weakFactory(argumentsSet)
               })

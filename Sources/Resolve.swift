@@ -136,7 +136,7 @@ extension DependencyContainer {
   func _resolve(type aType: Any.Type, tag: DependencyTagConvertible? = nil, builder: (() throws -> Any) throws -> Any) throws -> Any {
     let key = DefinitionKey(type: aType, typeOfArguments: Void.self, tag: tag?.dependencyTag)
     
-    return try inContext(key:key, injectedInType: context?.resolvingType, container: self) {
+    return try inContext(key:key, injectedInType: context?.resolvingType) {
       try self._resolve(key: key, builder: { definition in
         try builder { try definition.weakFactory(()) }
       })
@@ -154,7 +154,7 @@ extension DependencyContainer {
   func _resolve<U>(type aType: Any.Type, tag: DependencyTagConvertible? = nil, builder: ((U) throws -> Any) throws -> Any) throws -> Any {
     let key = DefinitionKey(type: aType, typeOfArguments: U.self, tag: tag?.dependencyTag)
     
-    return try inContext(key:key, injectedInType: context?.resolvingType, container: self) {
+    return try inContext(key:key, injectedInType: context?.resolvingType) {
       try self._resolve(key: key, builder: { definition in
         try builder(definition.weakFactory)
       })
@@ -165,22 +165,16 @@ extension DependencyContainer {
   func _resolve<T>(key aKey: DefinitionKey, builder: (_Definition) throws -> T) throws -> T {
 
     if aKey.type == DependencyContainer.self {
-      return (context.inCollaboration ? self : context.container) as! T
+      return self as! T
     }
 
     guard let matching = self.definition(matching: aKey) else {
       do {
         return try autowire(key: aKey)
       } catch {
-        //Try to resolve using Collaboratino first.
         if let resolved = collaboratingResolve(key: aKey, builder: builder) {
           return resolved
         } else {
-          //Now try to reoslve using parent child relationships.
-          if let resolved = parentResolve(key: aKey, builder: builder) {
-              return resolved
-          }
-
           throw error
         }
       }
@@ -218,7 +212,7 @@ extension DependencyContainer {
     //when builder calls factory it will in turn resolve sub-dependencies (if there are any)
     //when it returns instance that we try to resolve here can be already resolved
     //so we return it, throwing away instance created by previous call to builder
-    if let previouslyResolved: T = context.container.previouslyResolved(for: definition, key: key) {
+    if let previouslyResolved: T = previouslyResolved(for: definition, key: key) {
       log(level: .Verbose, "Reusing previously resolved instance \(previouslyResolved)")
       return previouslyResolved
     }
@@ -227,14 +221,14 @@ extension DependencyContainer {
     
     if let resolvable = resolvedInstance as? Resolvable {
       resolvedInstances.resolvableInstances.append(resolvable)
-      resolvable.resolveDependencies(context.inCollaboration ? self : context.container)
+      resolvable.resolveDependencies(self)
     }
 
     let shouldAutoInject = definition.autoInjectProperties ?? self.autoInjectProperties
     if shouldAutoInject {
       try autoInjectProperties(in: resolvedInstance)
     }
-    try definition.resolveProperties(of: resolvedInstance, container: context.inCollaboration ? self : context.container)
+    try definition.resolveProperties(of: resolvedInstance, container: self)
     
     log(level: .Verbose, "Resolved type \(key.type) with \(resolvedInstance)")
     return resolvedInstance
