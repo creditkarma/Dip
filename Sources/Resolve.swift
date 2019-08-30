@@ -327,7 +327,19 @@ class ResolvedInstances {
       }
     }
   }
+
+ 
   
+  func clone() -> ResolvedInstances {
+     let other =  ResolvedInstances()
+    
+    other.resolvedInstances = self.resolvedInstances
+    other.sharedSingletonsBox = self.sharedSingletonsBox
+    other.singletons = self.singletons
+    other.sharedWeakSingletonsBox = self.sharedWeakSingletonsBox
+    other.weakSingletons = self.weakSingletons
+    return other
+  }
 }
 
 //MARK: - Resolvable

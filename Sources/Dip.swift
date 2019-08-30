@@ -502,6 +502,20 @@ extension DependencyContainer: CustomStringConvertible {
   
 }
 
+extension DependencyContainer {
+  
+  public func clone() -> DependencyContainer {
+    let cloneContainer = DependencyContainer()
+    
+    cloneContainer.autoInjectProperties = self.autoInjectProperties
+    cloneContainer.definitions = self.definitions
+    cloneContainer.resolvedInstances = self.resolvedInstances.clone()
+    cloneContainer.bootstrapQueue = self.bootstrapQueue
+    cloneContainer._weakCollaborators = self._weakCollaborators
+    return cloneContainer
+  }
+}
+
 //MARK: - DependencyTagConvertible
 
 /// Implement this protocol on your type if you want to use its instances as `DependencyContainer`'s tags.
