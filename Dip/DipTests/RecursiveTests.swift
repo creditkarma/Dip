@@ -66,6 +66,7 @@ class RecursiveTests: XCTestCase {
             return
           }
           print(report)
+          XCTAssert(report.cycleSubStack.count == 3)
         default:
           XCTFail()
         }
