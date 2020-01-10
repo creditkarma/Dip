@@ -125,7 +125,7 @@ extension DipError {
     public let cycleSubStack: [Any.Type]
     
     public var description: String {
-      if(cycleSubStack.count > 0) {
+      if cycleSubStack.count > 0 {
         return "Recursive Depth exceeded: Cycle Found: \(cycleSubStack)"
       }
       return "Recursive Depth exceeded. No cycle found (inconclusive). Full stack: \(resolveStack)"
@@ -133,7 +133,7 @@ extension DipError {
   }
   
   public func analyzeRecursiveError() -> RecuriveErrorReport? {
-    if !isRecusiveError {
+    guard isRecusiveError else {
       return nil
     }
     
@@ -146,8 +146,6 @@ extension DipError {
           if let dipError = underlyingError as? DipError {
               buildStack(error: dipError)
           }
-          return
-        case .recursionDepthReached:
           return
         default:
           return
@@ -162,11 +160,10 @@ extension DipError {
     for (index, element) in resolveStack.enumerated() {
       let entryText = String(reflecting: element)
       let hit = (hitCount[entryText] ?? 0) + 1
-      if(hit == 2) {
-        let _last = resolveStack[0..<index].lastIndex { (type) -> Bool in
+      if hit == 2 {
+        guard let last = resolveStack[0..<index].lastIndex(where: { (type) -> Bool in
                    return String(reflecting: type) == entryText
-               }
-        guard let last = _last else {
+          }) else {
           break
         }
         
@@ -176,9 +173,8 @@ extension DipError {
       hitCount[entryText] = hit
     }
     
-    //Return result
     return RecuriveErrorReport.init(resolveStack: resolveStack,
-                                    cycleSubStack:cycleSubStack)
+                                    cycleSubStack: cycleSubStack)
   }
 }
 

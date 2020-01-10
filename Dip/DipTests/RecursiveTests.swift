@@ -1,5 +1,5 @@
 //
-//  RecusiveTests.swift
+//  RecursiveTests.swift
 //  DipTests
 //
 //  Created by John Twigg on 1/9/20.
@@ -10,7 +10,7 @@ import XCTest
 @testable import Dip
 
 
-class RecusiveTests: XCTestCase {
+class RecursiveTests: XCTestCase {
 
   
   fileprivate class ServiceC {

@@ -33,7 +33,7 @@
 		09FC481E1DAAA8F900566AA8 /* ComponentScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FC481C1DAAA8F900566AA8 /* ComponentScope.swift */; };
 		63937A6A21524C0B00AEE75A /* StoryboardInstantiatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63937A6921524C0B00AEE75A /* StoryboardInstantiatable.swift */; };
 		63937A6F21524DA300AEE75A /* DipUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63937A6B21524DA200AEE75A /* DipUITests.swift */; };
-		86134D0523C80D1800AB2A50 /* RecusiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86134D0423C80D1800AB2A50 /* RecusiveTests.swift */; };
+		86134D0523C80D1800AB2A50 /* RecursiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86134D0423C80D1800AB2A50 /* RecursiveTests.swift */; };
 		86418DEE1F510C9700ACFF23 /* RuntimeArguments+Generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86418DED1F510C9700ACFF23 /* RuntimeArguments+Generated.swift */; };
 		8652F4EB1F2C3D6000A92D4B /* ParentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8652F4EA1F2C3D6000A92D4B /* ParentTests.swift */; };
 /* End PBXBuildFile section */
@@ -81,7 +81,7 @@
 		63937A6C21524DA200AEE75A /* NSStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = NSStoryboard.storyboard; sourceTree = "<group>"; };
 		63937A6D21524DA300AEE75A /* TVStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = TVStoryboard.storyboard; sourceTree = "<group>"; };
 		63937A6E21524DA300AEE75A /* UIStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = UIStoryboard.storyboard; sourceTree = "<group>"; };
-		86134D0423C80D1800AB2A50 /* RecusiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecusiveTests.swift; sourceTree = "<group>"; };
+		86134D0423C80D1800AB2A50 /* RecursiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecursiveTests.swift; sourceTree = "<group>"; };
 		86418DED1F510C9700ACFF23 /* RuntimeArguments+Generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "RuntimeArguments+Generated.swift"; path = "../../Sources/RuntimeArguments+Generated.swift"; sourceTree = "<group>"; };
 		8652F4EA1F2C3D6000A92D4B /* ParentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParentTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -147,7 +147,7 @@
 				09BD350D1D84E30D00B33E53 /* Utils.swift */,
 				0919F4D11C16417000DC3B10 /* Info.plist */,
 				8652F4EA1F2C3D6000A92D4B /* ParentTests.swift */,
-				86134D0423C80D1800AB2A50 /* RecusiveTests.swift */,
+				86134D0423C80D1800AB2A50 /* RecursiveTests.swift */,
 			);
 			path = DipTests;
 			sourceTree = "<group>";
@@ -326,7 +326,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				09BD35141D84E30D00B33E53 /* RuntimeArgumentsTests.swift in Sources */,
-				86134D0523C80D1800AB2A50 /* RecusiveTests.swift in Sources */,
+				86134D0523C80D1800AB2A50 /* RecursiveTests.swift in Sources */,
 				09BD35151D84E30D00B33E53 /* ThreadSafetyTests.swift in Sources */,
 				63937A6F21524DA300AEE75A /* DipUITests.swift in Sources */,
 				09BD35121D84E30D00B33E53 /* DefinitionTests.swift in Sources */,

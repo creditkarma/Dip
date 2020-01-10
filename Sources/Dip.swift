@@ -61,7 +61,7 @@ public final class DependencyContainer {
   
   public static var enableAutoInjection: Bool? = nil;
   
-  public static var maxRecusiveDepth: Int = 100
+  public static var maxRecursiveDepth: Int = 100
 
   /**
    Designated initializer for a DependencyContainer
@@ -221,7 +221,7 @@ extension DependencyContainer {
     return try threadSafe {
       let currentContext = self.context
       
-      if currentContext?.depth ?? 0 > DependencyContainer.maxRecusiveDepth {
+      if currentContext?.depth ?? 0 > DependencyContainer.maxRecursiveDepth {
         throw DipError.recursionDepthReached(key: aKey)
       }
       
