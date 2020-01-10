@@ -84,7 +84,7 @@ public enum DipError: Error, CustomStringConvertible {
   public var description: String {
     switch self {
     case let .recursionDepthReached(key: key):
-      return "recusion:\(key)"
+      return "Max recusion depth reached:\(key)"
     case let .definitionNotFound(key):
       return "No definition registered for \(key).\nCheck the tag, type you try to resolve, number, order and types of runtime arguments passed to `resolve()` and match them with registered factories for type \(key.type)."
     case let .autoInjectionFailed(label, type, error):
@@ -103,11 +103,11 @@ public enum DipError: Error, CustomStringConvertible {
 extension DipError {
   
   /// Informs you if the resolve failed because recursive limit was reached. Warning: O(n) for depth. May be slow
-  public var isRecusiveError: Bool {
+  public var isRecursiveError: Bool {
     switch self {
       case let .autoWiringFailed(type: _, underlyingError: underlyingError):
         if let dipError = underlyingError as? DipError {
-          return dipError.isRecusiveError
+          return dipError.isRecursiveError
         }
         return false
       case .recursionDepthReached:
@@ -117,7 +117,7 @@ extension DipError {
     }
   }
   
-  public struct RecuriveErrorReport: CustomStringConvertible {
+  public struct RecursiveErrorReport: CustomStringConvertible {
     //The enture resolve stack that resulted in the recursive depth error
     public let resolveStack: [Any.Type]
     
@@ -132,8 +132,8 @@ extension DipError {
     }
   }
   
-  public func analyzeRecursiveError() -> RecuriveErrorReport? {
-    guard isRecusiveError else {
+  public func analyzeRecursiveError() -> RecursiveErrorReport? {
+    guard isRecursiveError else {
       return nil
     }
     
@@ -173,7 +173,7 @@ extension DipError {
       hitCount[entryText] = hit
     }
     
-    return RecuriveErrorReport.init(resolveStack: resolveStack,
+    return RecursiveErrorReport.init(resolveStack: resolveStack,
                                     cycleSubStack: cycleSubStack)
   }
 }

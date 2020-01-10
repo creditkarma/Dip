@@ -34,7 +34,7 @@ class RecursiveTests: XCTestCase {
   }
   
   
-    func testRecuriveDepthReached() {
+    func testRecursiveDepthReached() {
         let container = DependencyContainer()
       
       container.register { (serviceA: ServiceA ) -> ServiceRoot in
@@ -59,7 +59,7 @@ class RecursiveTests: XCTestCase {
       } catch {
         switch error {
         case let dipError as DipError:
-          XCTAssert(dipError.isRecusiveError)
+          XCTAssert(dipError.isRecursiveError)
           
           guard let report = dipError.analyzeRecursiveError() else {
             XCTFail()
