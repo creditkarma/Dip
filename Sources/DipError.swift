@@ -30,6 +30,13 @@
 public enum DipError: Error, CustomStringConvertible {
   
   /**
+   Thrown when max reecursion depth is occured. You may have a recursive dependency.
+   
+   - parameter key: definition key attempted when limit was his
+   */
+  case recursionDepthReached(key: DefinitionKey)
+  
+  /**
    Thrown by `resolve(tag:)` if no matching definition was registered in container.
    
    - parameter key: definition key used to lookup matching definition
@@ -76,6 +83,8 @@ public enum DipError: Error, CustomStringConvertible {
   
   public var description: String {
     switch self {
+    case let .recursionDepthReached(key: key):
+      return "recusion:\(key)"
     case let .definitionNotFound(key):
       return "No definition registered for \(key).\nCheck the tag, type you try to resolve, number, order and types of runtime arguments passed to `resolve()` and match them with registered factories for type \(key.type)."
     case let .autoInjectionFailed(label, type, error):
@@ -89,6 +98,86 @@ public enum DipError: Error, CustomStringConvertible {
       return "Resolved instance \(resolved ?? "nil") does not implement expected type \(key.type)."
     }
   }
+}
+
+extension DipError {
   
+  /// Informs you if the resolve failed because recursive limit was reached. Warning: O(n) for depth. May be slow
+  var isRecusiveError: Bool {
+    switch self {
+      case let .autoWiringFailed(type: _, underlyingError: underlyingError):
+        if let dipError = underlyingError as? DipError {
+          return dipError.isRecusiveError
+        }
+        return false
+      case .recursionDepthReached:
+        return true
+      default:
+        return false
+    }
+  }
+  
+  struct RecuriveErrorReport: CustomStringConvertible {
+    //The enture resolve stack that resulted in the recursive depth error
+    let resolveStack: [Any.Type]
+    
+    //The sub stack that was identified as a cycle, if any.
+    let cycleSubStack: [Any.Type]
+    
+    var description: String {
+      if(cycleSubStack.count > 0) {
+        return "Recursive Depth exceeded: Cycle Found: \(cycleSubStack)"
+      }
+      return "Recursive Depth exceeded. No cycle found (inconclusive). Full stack: \(resolveStack)"
+    }
+  }
+  func analyzeRecursiveError() -> RecuriveErrorReport? {
+    if !isRecusiveError {
+      return nil
+    }
+    
+    var resolveStack = [Any.Type]()
+    
+    func buildStack(error: DipError) {
+      switch error {
+        case let .autoWiringFailed(type: type, underlyingError: underlyingError):
+          resolveStack.append(type)
+          if let dipError = underlyingError as? DipError {
+              buildStack(error: dipError)
+          }
+          return
+        case .recursionDepthReached:
+          return
+        default:
+          return
+      }
+    }
+    
+    buildStack(error: self)
+    
+    //Search for cycle subStack
+    var cycleSubStack = [Any.Type]()
+    var hitCount = [String:Int]()
+    for (index, element) in resolveStack.enumerated() {
+      let entryText = String(reflecting: element)
+      let hit = (hitCount[entryText] ?? 0) + 1
+      if(hit == 2) {
+        let _last = resolveStack[0..<index].lastIndex { (type) -> Bool in
+                   return String(reflecting: type) == entryText
+               }
+        guard let last = _last else {
+          break
+        }
+        
+        cycleSubStack = Array(resolveStack[last..<index])
+        break
+      }
+      hitCount[entryText] = hit
+    }
+    
+    //Return result
+    return RecuriveErrorReport.init(resolveStack: resolveStack,
+                                    cycleSubStack:cycleSubStack)
+  }
 }
 
