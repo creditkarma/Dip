@@ -119,10 +119,10 @@ extension DipError {
   
   public struct RecuriveErrorReport: CustomStringConvertible {
     //The enture resolve stack that resulted in the recursive depth error
-    let resolveStack: [Any.Type]
+    public let resolveStack: [Any.Type]
     
     //The sub stack that was identified as a cycle, if any.
-    let cycleSubStack: [Any.Type]
+    public let cycleSubStack: [Any.Type]
     
     public var description: String {
       if(cycleSubStack.count > 0) {
