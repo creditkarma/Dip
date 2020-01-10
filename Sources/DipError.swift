@@ -103,7 +103,7 @@ public enum DipError: Error, CustomStringConvertible {
 extension DipError {
   
   /// Informs you if the resolve failed because recursive limit was reached. Warning: O(n) for depth. May be slow
-  var isRecusiveError: Bool {
+  public var isRecusiveError: Bool {
     switch self {
       case let .autoWiringFailed(type: _, underlyingError: underlyingError):
         if let dipError = underlyingError as? DipError {
@@ -117,21 +117,22 @@ extension DipError {
     }
   }
   
-  struct RecuriveErrorReport: CustomStringConvertible {
+  public struct RecuriveErrorReport: CustomStringConvertible {
     //The enture resolve stack that resulted in the recursive depth error
     let resolveStack: [Any.Type]
     
     //The sub stack that was identified as a cycle, if any.
     let cycleSubStack: [Any.Type]
     
-    var description: String {
+    public var description: String {
       if(cycleSubStack.count > 0) {
         return "Recursive Depth exceeded: Cycle Found: \(cycleSubStack)"
       }
       return "Recursive Depth exceeded. No cycle found (inconclusive). Full stack: \(resolveStack)"
     }
   }
-  func analyzeRecursiveError() -> RecuriveErrorReport? {
+  
+  public func analyzeRecursiveError() -> RecuriveErrorReport? {
     if !isRecusiveError {
       return nil
     }
