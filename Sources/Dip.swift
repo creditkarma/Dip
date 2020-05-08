@@ -60,6 +60,7 @@ public final class DependencyContainer {
   }
   
   public static var enableAutoInjection: Bool? = nil;
+  public static var enableThreadSafe: Bool = true
 
   /**
    Designated initializer for a DependencyContainer
@@ -108,9 +109,13 @@ public final class DependencyContainer {
   }
 
   func threadSafe<T>(_ closure: () throws -> T) rethrows -> T {
-    lock.lock()
-    defer { lock.unlock() }
-    return try closure()
+    if Self.enableThreadSafe {
+      lock.lock()
+      defer { lock.unlock() }
+      return try closure()
+    } else {
+      return try closure()
+    }
   }
   
 }
