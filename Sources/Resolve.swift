@@ -263,6 +263,8 @@ extension DependencyContainer {
       return (key, definition)
     }
     
+    //if no definition registered for exact type try to find type-forwarding definition that can resolve the type
+    //that will actually happen only when resolving optionals
     if definitions[type: key.type].filter({ $0.0.type == key.type }).isEmpty {
       return typeForwardingDefinition(forKey: key)
     }

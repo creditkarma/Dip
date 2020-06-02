@@ -28,13 +28,11 @@ public struct DefinitionKey: Hashable, CustomStringConvertible {
   public let typeOfArguments: Any.Type
   public private(set) var tag: DependencyContainer.Tag?
   
-  //public private(set) var hashValue: Int
 
   init(type: Any.Type, typeOfArguments: Any.Type, tag: DependencyContainer.Tag? = nil) {
     self.type = type
     self.typeOfArguments = typeOfArguments
     self.tag = tag
-    //self.hashValue = Self.calculateHash(type: type, typeOfArguments: typeOfArguments, tag: tag)
   }
   
   public func hash(into hasher: inout Hasher) {
@@ -42,17 +40,7 @@ public struct DefinitionKey: Hashable, CustomStringConvertible {
     hasher.combine(ObjectIdentifier(typeOfArguments))
     hasher.combine(tag.desc)
   }
-  
-  static func calculateHash(type: Any.Type,
-                            typeOfArguments: Any.Type,
-                            tag: DependencyContainer.Tag?) -> Int {
-    return "\(type)-\(typeOfArguments)-\(tag.desc)".hashValue
-  }
-  
-//  public var hashValue: Int {
-//    return "\(type)-\(typeOfArguments)-\(tag.desc)".hashValue
-//  }
-  
+    
   public var description: String {
     return "type: \(type), arguments: \(typeOfArguments), tag: \(tag.desc)"
   }
@@ -60,7 +48,6 @@ public struct DefinitionKey: Hashable, CustomStringConvertible {
   func tagged(with tag: DependencyContainer.Tag?) -> DefinitionKey {
     var tagged = self
     tagged.tag = tag
-    //tagged.hashValue = Self.calculateHash(type: tagged.type, typeOfArguments: tagged.typeOfArguments, tag: tag)
     return tagged
   }
 

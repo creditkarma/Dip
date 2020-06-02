@@ -41,8 +41,6 @@ public final class DependencyContainer {
 
   var autoInjectProperties: Bool
   internal(set) public var context: Context!
-//  var definitions = [DefinitionKey: _Definition]()
-//  var definitionsByType = [Int: [DefinitionKey: _Definition]]()
   
   let definitions = DefinitionsContainer()
   var resolvedInstances = ResolvedInstances()
@@ -420,10 +418,6 @@ extension DependencyContainer {
     threadSafe {
       definitions[key]?.container = nil
       definitions.remove(key: key)
-//      if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
-//        data[key] = nil
-//        definitionsByType[ObjectIdentifier(key.type).hashValue] = data
-//      }
       resolvedInstances.singletons[key] = nil
       resolvedInstances.weakSingletons[key] = nil
       resolvedInstances.sharedSingletons[key] = nil
@@ -436,9 +430,8 @@ extension DependencyContainer {
    */
   public func reset() {
     threadSafe {
-      //definitions.forEach { $0.1.container = nil }
+      definitions.all.forEach { $0.1.container = nil }
       definitions.removeAll()
-      //definitionsByType.removeAll()
       resolvedInstances.singletons.removeAll()
       resolvedInstances.weakSingletons.removeAll()
       resolvedInstances.sharedSingletons.removeAll()
@@ -589,8 +582,13 @@ extension DependencyContainer.Tag: Equatable {
 
 
 class DefinitionsContainer {
+  // Backing data structure. Its a map of
+  // [ Type.hashValue: [DefinitionKey: _Definition]]
+  // so we have fash lookup of by Type for the definitions that handle it.
+  private var definitionsByType = [Int: [DefinitionKey: _Definition]]()
   
   typealias DefinitionKeyValuePair = (DefinitionKey, _Definition)
+  
   var all: [DefinitionKeyValuePair] {
     return definitionsByType.reduce([DefinitionKeyValuePair]()) { (acc, arg1) in
       var acc = acc
@@ -599,9 +597,6 @@ class DefinitionsContainer {
       return acc
     }
   }
-  
-  /// key: `ObjectIden`
-  var definitionsByType = [Int: [DefinitionKey: _Definition]]()
   
   func removeAll() {
       definitionsByType.removeAll()
@@ -615,7 +610,7 @@ class DefinitionsContainer {
       definitionsByType[typeKey] = definitionMap
     }
     
-    // Definitions automatically store T?
+    // Definitions automatically store T? so so does out table
     do {
       let typeKey = ObjectIdentifier(T?.self).hashValue
       var definitionMap = definitionsByType[typeKey] ?? [:]
@@ -624,6 +619,7 @@ class DefinitionsContainer {
     }
   }
   
+  // Removes a DefinitionKey, and if the there's no more definitions under that Type, the whole entry is removed.
   func remove(key: DefinitionKey) {
     definitionsByType = definitionsByType.compactMapValues { (definitionMap) -> [DefinitionKey: _Definition]? in
       var definitionMap = definitionMap
