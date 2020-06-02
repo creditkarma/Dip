@@ -589,12 +589,10 @@ class DefinitionsContainer {
   
   typealias DefinitionKeyValuePair = (DefinitionKey, _Definition)
   
-  var all: [DefinitionKeyValuePair] {
-    return definitionsByType.reduce([DefinitionKeyValuePair]()) { (acc, arg1) in
-      var acc = acc
+  var all: [DefinitionKeyValuePair] {    
+    return definitionsByType.reduce(into: [DefinitionKeyValuePair]()) { (acc, arg1) in
       let (_, value) = arg1
       acc.append(contentsOf: value.map { ($0, $1)})
-      return acc
     }
   }
   
