@@ -67,8 +67,17 @@ extension DependencyContainer {
         _remove(definitionForKey: key)
       }
       
+      
+      
       definition.container = self
       definitions[key] = definition
+      if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
+        data[key] = definition
+        definitionsByType[ObjectIdentifier(key.type).hashValue] = data
+      } else {
+        definitionsByType[ObjectIdentifier(key.type).hashValue] = [key: definition]
+      }
+      
       resolvedInstances.singletons[key] = nil
       resolvedInstances.weakSingletons[key] = nil
       resolvedInstances.sharedSingletons[key] = nil

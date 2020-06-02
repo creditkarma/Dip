@@ -62,7 +62,18 @@ extension DependencyContainer {
   }
   
   private func autoWiringDefinition(byKey key: DefinitionKey, strictByTag: Bool) throws -> KeyDefinitionPair {
-    var definitions = self.definitions.map({ (key: $0.0, definition: $0.1) })
+   
+//    if let def = self.definitionsByType[ObjectIdentifier(key.type).hashValue] {
+//      if let f = def.first {
+//        return f
+//      }
+//      throw DipError.definitionNotFound(key: key)
+//
+//    }
+//    
+    var definitions = self.definitionsByType[ObjectIdentifier(key.type).hashValue]?.map({ (key: $0.0, definition: $0.1) }) ?? []
+    
+    //var definitions = self.definitions.map({ (key: $0.0, definition: $0.1) })
     
     definitions = filter(definitions: definitions, byKey: key, strictByTag: strictByTag)
     definitions = definitions.sorted(by: { $0.definition.numberOfArguments > $1.definition.numberOfArguments })

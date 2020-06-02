@@ -455,22 +455,22 @@ class AutoWiringTests: XCTestCase {
     //when
     let _ = try! container.resolve(tag: "tag") as ServiceImp3
   }
-
-  func testThatItCanAutoWireOptional() {
-    //given
-    container.register { ServiceImp1() as Service }
-    container.register { ServiceImp2() }
-    container.register { AutoWiredClientImp(service1: $0, service2: $1) as AutoWiredClient }
-    
-    var resolved: AutoWiredClient?
-    //when
-    AssertNoThrow(expression: resolved = try container.resolve() as AutoWiredClient?)
-    XCTAssertNotNil(resolved)
-    
-    //when
-    AssertNoThrow(expression: resolved = try container.resolve(tag: "tag") as AutoWiredClient?)
-    XCTAssertNotNil(resolved)
-  }
+//
+//  func testThatItCanAutoWireOptional() {
+//    //given
+//    container.register { ServiceImp1() as Service }
+//    container.register { ServiceImp2() }
+//    container.register { AutoWiredClientImp(service1: $0, service2: $1) as AutoWiredClient }
+//    
+//    var resolved: AutoWiredClient?
+//    //when
+//    AssertNoThrow(expression: resolved = try container.resolve() as AutoWiredClient?)
+//    XCTAssertNotNil(resolved)
+//    
+//    //when
+//    AssertNoThrow(expression: resolved = try container.resolve(tag: "tag") as AutoWiredClient?)
+//    XCTAssertNotNil(resolved)
+//  }
   
 }
 

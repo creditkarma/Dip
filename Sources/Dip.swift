@@ -42,6 +42,7 @@ public final class DependencyContainer {
   var autoInjectProperties: Bool
   internal(set) public var context: Context!
   var definitions = [DefinitionKey: _Definition]()
+  var definitionsByType = [Int: [DefinitionKey: _Definition]]()
   var resolvedInstances = ResolvedInstances()
   private let lock = RecursiveLock()
   

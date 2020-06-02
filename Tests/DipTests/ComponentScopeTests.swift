@@ -372,5 +372,43 @@ class ComponentScopeTests: XCTestCase {
     test(.eagerSingleton)
   }
   
+  class TestOne {
+         init() {}
+     }
+
+     let test: Any.Type = TestOne.self
+
+  
+//  func testPerf() {
+//   
+//    let option = XCTMeasureOptions.init()
+//    option.iterationCount = 100
+//    
+//    self.measure(options: option) {
+//      _ = "\(test)".hashValue
+//    }
+//    
+//  }
+//  
+//  func testPerf2() {
+//    let option = XCTMeasureOptions.init()
+//    option.iterationCount = 100
+//    
+//    self.measure(options: option) {
+//      _ = String(describing: test).hashValue
+//    }
+//
+//  }
+//  
+//  func testPerf3() {
+//    
+//    let option = XCTMeasureOptions.init()
+//    option.iterationCount = 100
+//    self.measure(options: option) {
+//      _ = ObjectIdentifier(test).hashValue
+//    }
+//
+//  }
+  
 }
 
