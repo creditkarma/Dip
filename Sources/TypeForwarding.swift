@@ -131,7 +131,9 @@ extension DependencyContainer {
   
   /// Searches for definition that forwards requested type
   func typeForwardingDefinition(forKey key: DefinitionKey) -> KeyDefinitionPair? {
-    var forwardingDefinitions = self.definitions.map({ (key: $0.0, definition: $0.1) })
+    var forwardingDefinitions = self.definitionsByType[ObjectIdentifier(key.type).hashValue]?.map({ (key: $0.0, definition: $0.1) }) ?? []
+    
+    //var forwardingDefinitions = self.definitionsByType.map({ (key: $0.0, definition: $0.1) })
     
     forwardingDefinitions = filter(definitions: forwardingDefinitions, byKey: key, byTypeOfArguments: true)
     forwardingDefinitions = order(definitions: forwardingDefinitions, byTag: key.tag)
