@@ -610,7 +610,7 @@ class DefinitionsContainer {
       definitionsByType[typeKey] = definitionMap
     }
     
-    // Definitions automatically store T? so so does out table
+    // Definitions automatically store T? so so does our table
     do {
       let typeKey = ObjectIdentifier(T?.self).hashValue
       var definitionMap = definitionsByType[typeKey] ?? [:]
