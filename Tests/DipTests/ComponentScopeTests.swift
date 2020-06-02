@@ -35,11 +35,15 @@ private class Server {
   init() {}
 }
 
-private class Client {
+private class Client: CustomStringConvertible {
   var server: Server
   
   init(server: Server) {
     self.server = server
+  }
+  
+  var description: String {
+    return "Client.description"
   }
 }
 
@@ -192,6 +196,7 @@ class ComponentScopeTests: XCTestCase {
   }
   
   func testThatItReusesInstanceInSharedScopeDuringResolve() {
+       //Dip.logLevel = .Verbose
     //given
     container.register { Client(server: try self.container.resolve()) as Client }
     
