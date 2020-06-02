@@ -686,12 +686,13 @@ class ResolveTestsTests: XCTestCase {
   }
   
   func testStress() {
-    let option = XCTMeasureOptions.init()
-      option.iterationCount = 1
-          
-      self.measure(options: option) {
-          _ = try! container.resolve() as Service99
-      }
+    _ = try! container.resolve() as Service99
+//    let option = XCTMeasureOptions.init()
+//      option.iterationCount = 1
+//
+//      self.measure(options: option) {
+//
+//      }
   }
 }
 
