@@ -590,8 +590,9 @@ extension DependencyContainer.Tag: Equatable {
 
 class DefinitionsContainer {
   
-  var all: [(DefinitionKey, _Definition)] {
-    return definitionsByType.reduce([(DefinitionKey, _Definition)]()) { (acc, arg1) in
+  typealias DefinitionKeyValuePair = (DefinitionKey, _Definition)
+  var all: [DefinitionKeyValuePair] {
+    return definitionsByType.reduce([DefinitionKeyValuePair]()) { (acc, arg1) in
       var acc = acc
       let (_, value) = arg1
       acc.append(contentsOf: value.map { ($0, $1)})
@@ -614,7 +615,7 @@ class DefinitionsContainer {
       definitionsByType[typeKey] = definitionMap
     }
     
-    // Definitions automatically store
+    // Definitions automatically store T?
     do {
       let typeKey = ObjectIdentifier(T?.self).hashValue
       var definitionMap = definitionsByType[typeKey] ?? [:]
@@ -624,7 +625,14 @@ class DefinitionsContainer {
   }
   
   func remove(key: DefinitionKey) {
-    
+    definitionsByType = definitionsByType.compactMapValues { (definitionMap) -> [DefinitionKey: _Definition]? in
+      var definitionMap = definitionMap
+      definitionMap.removeValue(forKey: key)
+      if definitionMap.isEmpty {
+        return nil;
+      }
+      return definitionMap
+    }
   }
   
   
@@ -640,12 +648,5 @@ class DefinitionsContainer {
         let typeKey = ObjectIdentifier(type).hashValue
         return definitionsByType[typeKey] ?? [:]
     }
-    
-//    set {
-//        let typeKey = ObjectIdentifier(type).hashValue
-//        let definitionMap = definitionsByType[typeKey] ?? [:]
-//        definitionsByType[typeKey] = definitionMap
-//        definitionsByType[typeKey]  = definitionMap
-//      }
   }
 }
