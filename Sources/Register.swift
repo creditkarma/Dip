@@ -73,9 +73,12 @@ extension DependencyContainer {
       definitions[key] = definition
       if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
         data[key] = definition
-        definitionsByType[ObjectIdentifier(key.type).hashValue] = data
+        definitionsByType[ObjectIdentifier(T.self).hashValue] = data
+        definitionsByType[ObjectIdentifier(T?.self).hashValue] = data
+        
       } else {
-        definitionsByType[ObjectIdentifier(key.type).hashValue] = [key: definition]
+        definitionsByType[ObjectIdentifier(T.self).hashValue] = [key: definition]
+        definitionsByType[ObjectIdentifier(T?.self).hashValue] = [key: definition]
       }
       
       resolvedInstances.singletons[key] = nil
