@@ -41,8 +41,10 @@ public final class DependencyContainer {
 
   var autoInjectProperties: Bool
   internal(set) public var context: Context!
-  var definitions = [DefinitionKey: _Definition]()
-  var definitionsByType = [Int: [DefinitionKey: _Definition]]()
+//  var definitions = [DefinitionKey: _Definition]()
+//  var definitionsByType = [Int: [DefinitionKey: _Definition]]()
+  
+  let definitions = DefinitionsContainer()
   var resolvedInstances = ResolvedInstances()
   private let lock = RecursiveLock()
   
@@ -417,11 +419,11 @@ extension DependencyContainer {
     
     threadSafe {
       definitions[key]?.container = nil
-      definitions[key] = nil
-      if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
-        data[key] = nil
-        definitionsByType[ObjectIdentifier(key.type).hashValue] = data
-      }
+      definitions.remove(key: key)
+//      if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
+//        data[key] = nil
+//        definitionsByType[ObjectIdentifier(key.type).hashValue] = data
+//      }
       resolvedInstances.singletons[key] = nil
       resolvedInstances.weakSingletons[key] = nil
       resolvedInstances.sharedSingletons[key] = nil
@@ -434,9 +436,9 @@ extension DependencyContainer {
    */
   public func reset() {
     threadSafe {
-      definitions.forEach { $0.1.container = nil }
+      //definitions.forEach { $0.1.container = nil }
       definitions.removeAll()
-      definitionsByType.removeAll()
+      //definitionsByType.removeAll()
       resolvedInstances.singletons.removeAll()
       resolvedInstances.weakSingletons.removeAll()
       resolvedInstances.sharedSingletons.removeAll()
@@ -466,7 +468,7 @@ extension DependencyContainer {
   
   func _validate(arguments _arguments: [Any]) throws {
     let arguments = _arguments
-    validateNextDefinition: for (key, _) in definitions {
+    validateNextDefinition: for (key, _) in definitions.all {
       do {
         //try to resolve key using provided arguments
         for argumentsSet in arguments {
@@ -503,7 +505,7 @@ extension DependencyContainer {
 extension DependencyContainer: CustomStringConvertible {
   
   public var description: String {
-    return "Definitions: \(definitions.count)\n" + definitions.map({ "\($0.0)" }).joined(separator: "\n")
+    return "Definitions: \(definitions.all.count)\n" + definitions.all.map({ "\($0.0)" }).joined(separator: "\n")
   }
   
 }
@@ -583,4 +585,67 @@ extension DependencyContainer.Tag: Equatable {
     }
   }
 
+}
+
+
+class DefinitionsContainer {
+  
+  var all: [(DefinitionKey, _Definition)] {
+    return definitionsByType.reduce([(DefinitionKey, _Definition)]()) { (acc, arg1) in
+      var acc = acc
+      let (_, value) = arg1
+      acc.append(contentsOf: value.map { ($0, $1)})
+      return acc
+    }
+  }
+  
+  /// key: `ObjectIden`
+  var definitionsByType = [Int: [DefinitionKey: _Definition]]()
+  
+  func removeAll() {
+      definitionsByType.removeAll()
+  }
+  
+  func add<T,U>(key: DefinitionKey, definition: Definition<T, U>) {
+    do {
+      let typeKey = ObjectIdentifier(T.self).hashValue
+      var definitionMap = definitionsByType[typeKey] ?? [:]
+      definitionMap[key] = definition
+      definitionsByType[typeKey] = definitionMap
+    }
+    
+    // Definitions automatically store
+    do {
+      let typeKey = ObjectIdentifier(T?.self).hashValue
+      var definitionMap = definitionsByType[typeKey] ?? [:]
+      definitionMap[key] = definition
+      definitionsByType[typeKey] = definitionMap
+    }
+  }
+  
+  func remove(key: DefinitionKey) {
+    
+  }
+  
+  
+  subscript(_ key: DefinitionKey) -> _Definition? {
+    get {
+        let typeKey = ObjectIdentifier(key.type).hashValue
+        return definitionsByType[typeKey]?[key]
+    }
+   }
+  
+  subscript(type type: Any.Type) -> [DefinitionKey: _Definition] {
+    get {
+        let typeKey = ObjectIdentifier(type).hashValue
+        return definitionsByType[typeKey] ?? [:]
+    }
+    
+//    set {
+//        let typeKey = ObjectIdentifier(type).hashValue
+//        let definitionMap = definitionsByType[typeKey] ?? [:]
+//        definitionsByType[typeKey] = definitionMap
+//        definitionsByType[typeKey]  = definitionMap
+//      }
+  }
 }

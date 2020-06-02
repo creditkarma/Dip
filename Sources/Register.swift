@@ -68,18 +68,17 @@ extension DependencyContainer {
       }
       
       
-      
       definition.container = self
-      definitions[key] = definition
-      if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
-        data[key] = definition
-        definitionsByType[ObjectIdentifier(T.self).hashValue] = data
-        definitionsByType[ObjectIdentifier(T?.self).hashValue] = data
-        
-      } else {
-        definitionsByType[ObjectIdentifier(T.self).hashValue] = [key: definition]
-        definitionsByType[ObjectIdentifier(T?.self).hashValue] = [key: definition]
-      }
+      definitions.add(key: key, definition: definition)
+//      if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
+//        data[key] = definition
+//        definitionsByType[ObjectIdentifier(T.self).hashValue] = data
+//        definitionsByType[ObjectIdentifier(T?.self).hashValue] = data
+//        
+//      } else {
+//        definitionsByType[ObjectIdentifier(T.self).hashValue] = [key: definition]
+//        definitionsByType[ObjectIdentifier(T?.self).hashValue] = [key: definition]
+//      }
       
       resolvedInstances.singletons[key] = nil
       resolvedInstances.weakSingletons[key] = nil

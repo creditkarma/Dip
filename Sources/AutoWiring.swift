@@ -63,7 +63,7 @@ extension DependencyContainer {
   
   private func autoWiringDefinition(byKey key: DefinitionKey, strictByTag: Bool) throws -> KeyDefinitionPair {
    
-    var definitions = self.definitionsByType[ObjectIdentifier(key.type).hashValue]?.map({ (key: $0.0, definition: $0.1) }) ?? []
+    var definitions = self.definitions[type: key.type].map({ (key: $0.0, definition: $0.1) })
     
     //var definitions = self.definitions.map({ (key: $0.0, definition: $0.1) })
     

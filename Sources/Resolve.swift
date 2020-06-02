@@ -263,7 +263,7 @@ extension DependencyContainer {
       return (key, definition)
     }
     
-    if (definitionsByType[ObjectIdentifier(key.type).hashValue] ?? [:]).filter({ $0.0.type == key.type }).isEmpty {
+    if definitions[type: key.type].filter({ $0.0.type == key.type }).isEmpty {
       return typeForwardingDefinition(forKey: key)
     }
     return nil
