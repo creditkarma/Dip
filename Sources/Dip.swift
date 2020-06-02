@@ -418,6 +418,10 @@ extension DependencyContainer {
     threadSafe {
       definitions[key]?.container = nil
       definitions[key] = nil
+      if var data = definitionsByType[ObjectIdentifier(key.type).hashValue] {
+        data[key] = nil
+        definitionsByType[ObjectIdentifier(key.type).hashValue] = data
+      }
       resolvedInstances.singletons[key] = nil
       resolvedInstances.weakSingletons[key] = nil
       resolvedInstances.sharedSingletons[key] = nil
@@ -432,6 +436,7 @@ extension DependencyContainer {
     threadSafe {
       definitions.forEach { $0.1.container = nil }
       definitions.removeAll()
+      definitionsByType.removeAll()
       resolvedInstances.singletons.removeAll()
       resolvedInstances.weakSingletons.removeAll()
       resolvedInstances.sharedSingletons.removeAll()
