@@ -60,10 +60,7 @@ public struct DefinitionKey: Hashable, CustomStringConvertible {
 
   /// Check two definition keys on equality by comparing their `type`, `factoryType` and `tag` properties.
   public static func ==(lhs: DefinitionKey, rhs: DefinitionKey) -> Bool {
-    return
-      lhs.type == rhs.type &&
-      lhs.typeOfArguments == rhs.typeOfArguments &&
-      lhs.tag == rhs.tag
+    return lhs.hashValue == rhs.hashValue
   }
   
 }
