@@ -35,15 +35,11 @@ private class Server {
   init() {}
 }
 
-private class Client: CustomStringConvertible {
+private class Client {
   var server: Server
   
   init(server: Server) {
     self.server = server
-  }
-  
-  var description: String {
-    return "Client.description"
   }
 }
 
@@ -196,7 +192,6 @@ class ComponentScopeTests: XCTestCase {
   }
   
   func testThatItReusesInstanceInSharedScopeDuringResolve() {
-       //Dip.logLevel = .Verbose
     //given
     container.register { Client(server: try self.container.resolve()) as Client }
     
@@ -371,44 +366,6 @@ class ComponentScopeTests: XCTestCase {
     test(.weakSingleton)
     test(.eagerSingleton)
   }
-  
-  class TestOne {
-         init() {}
-     }
-
-     let test: Any.Type = TestOne.self
-
-  
-//  func testPerf() {
-//   
-//    let option = XCTMeasureOptions.init()
-//    option.iterationCount = 100
-//    
-//    self.measure(options: option) {
-//      _ = "\(test)".hashValue
-//    }
-//    
-//  }
-//  
-//  func testPerf2() {
-//    let option = XCTMeasureOptions.init()
-//    option.iterationCount = 100
-//    
-//    self.measure(options: option) {
-//      _ = String(describing: test).hashValue
-//    }
-//
-//  }
-//  
-//  func testPerf3() {
-//    
-//    let option = XCTMeasureOptions.init()
-//    option.iterationCount = 100
-//    self.measure(options: option) {
-//      _ = ObjectIdentifier(test).hashValue
-//    }
-//
-//  }
   
 }
 
