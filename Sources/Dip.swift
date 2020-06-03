@@ -583,7 +583,7 @@ extension DependencyContainer.Tag: Equatable {
 
 final class DefinitionsContainer {
   // Backing data structure. Its a map of
-  // [ Type.hashValue: [DefinitionKey: _Definition]]
+  // [Type.hashValue: [DefinitionKey: _Definition]]
   // so we have fash lookup of by Type for the definitions that handle it.
   private var definitionsByType = [Int: [DefinitionKey: _Definition]]()
   
