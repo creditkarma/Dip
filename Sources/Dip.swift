@@ -581,7 +581,7 @@ extension DependencyContainer.Tag: Equatable {
 }
 
 
-class DefinitionsContainer {
+final class DefinitionsContainer {
   // Backing data structure. Its a map of
   // [ Type.hashValue: [DefinitionKey: _Definition]]
   // so we have fash lookup of by Type for the definitions that handle it.
@@ -589,7 +589,7 @@ class DefinitionsContainer {
   
   typealias DefinitionKeyValuePair = (DefinitionKey, _Definition)
   
-  var all: [DefinitionKeyValuePair] {    
+  var all: [DefinitionKeyValuePair] {
     return definitionsByType.reduce(into: [DefinitionKeyValuePair]()) { (acc, arg1) in
       let (_, value) = arg1
       acc.append(contentsOf: value.map { ($0, $1)})
