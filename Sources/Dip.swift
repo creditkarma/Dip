@@ -629,13 +629,12 @@ final class DefinitionsContainer {
     }
   }
   
-  
   subscript(_ key: DefinitionKey) -> _Definition? {
     get {
         let typeKey = ObjectIdentifier(key.type).hashValue
         return definitionsByType[typeKey]?[key]
     }
-   }
+  }
   
   subscript(type type: Any.Type) -> [DefinitionKey: _Definition] {
     get {

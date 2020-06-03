@@ -67,10 +67,9 @@ extension DependencyContainer {
         _remove(definitionForKey: key)
       }
       
-      
       definition.container = self
       definitions.add(key: key, definition: definition)
-     
+
       resolvedInstances.singletons[key] = nil
       resolvedInstances.weakSingletons[key] = nil
       resolvedInstances.sharedSingletons[key] = nil
