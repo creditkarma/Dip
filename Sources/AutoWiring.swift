@@ -62,7 +62,6 @@ extension DependencyContainer {
   }
   
   private func autoWiringDefinition(byKey key: DefinitionKey, strictByTag: Bool) throws -> KeyDefinitionPair {
-   
     var definitions = self.definitions[type: key.type].map {(key: $0.0, definition: $0.1)}
     
     definitions = filter(definitions: definitions, byKey: key, strictByTag: strictByTag)
