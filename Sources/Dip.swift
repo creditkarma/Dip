@@ -41,7 +41,6 @@ public final class DependencyContainer {
 
   var autoInjectProperties: Bool
   internal(set) public var context: Context!
-  
   let definitions = DefinitionsContainer()
   var resolvedInstances = ResolvedInstances()
   private let lock = RecursiveLock()
@@ -579,7 +578,6 @@ extension DependencyContainer.Tag: Equatable {
   }
 
 }
-
 
 final class DefinitionsContainer {
   // Backing data structure. Its a map of
