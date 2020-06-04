@@ -621,7 +621,7 @@ final class DefinitionsContainer {
       var definitionMap = definitionMap
       definitionMap.removeValue(forKey: key)
       if definitionMap.isEmpty {
-        return nil;
+        return nil
       }
       return definitionMap
     }
