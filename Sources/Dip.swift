@@ -598,7 +598,7 @@ final class DefinitionsContainer {
       definitionsByType.removeAll()
   }
   
-  func add<T,U>(key: DefinitionKey, definition: Definition<T, U>) {
+  func add<T, U>(key: DefinitionKey, definition: Definition<T, U>) {
     do {
       let typeKey = ObjectIdentifier(T.self).hashValue
       var definitionMap = definitionsByType[typeKey] ?? [:]
