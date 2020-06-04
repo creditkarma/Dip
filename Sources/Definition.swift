@@ -27,7 +27,6 @@ public struct DefinitionKey: Hashable, CustomStringConvertible {
   public let type: Any.Type
   public let typeOfArguments: Any.Type
   public private(set) var tag: DependencyContainer.Tag?
-  
 
   init(type: Any.Type, typeOfArguments: Any.Type, tag: DependencyContainer.Tag? = nil) {
     self.type = type
@@ -40,7 +39,7 @@ public struct DefinitionKey: Hashable, CustomStringConvertible {
     hasher.combine(ObjectIdentifier(typeOfArguments))
     hasher.combine(tag.desc)
   }
-    
+  
   public var description: String {
     return "type: \(type), arguments: \(typeOfArguments), tag: \(tag.desc)"
   }
