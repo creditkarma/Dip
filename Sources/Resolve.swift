@@ -194,7 +194,6 @@ extension DependencyContainer {
       return previouslyResolved
     }
     
-    log(level: .Verbose, context)
     var resolvedInstance = try builder(definition)
     
     /*
