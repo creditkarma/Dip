@@ -190,7 +190,7 @@ extension DependencyContainer {
     
     //first search for already resolved instance for this type or any of forwarding types
     if let previouslyResolved: T = previouslyResolved(for: definition, key: key) {
-      log(level: .Verbose, "Reusing previously resolved instance \(previouslyResolved)")
+      log(level: .Verbose, "Cached: Reusing previously resolved instance \(previouslyResolved)")
       return previouslyResolved
     }
     
@@ -218,7 +218,7 @@ extension DependencyContainer {
     //when it returns instance that we try to resolve here can be already resolved
     //so we return it, throwing away instance created by previous call to builder
     if let previouslyResolved: T = context.container.previouslyResolved(for: definition, key: key) {
-      log(level: .Verbose, "Reusing previously resolved instance \(previouslyResolved)")
+      log(level: .Verbose, "Duplicate Construction: Reusing previously resolved instance \(previouslyResolved)")
       return previouslyResolved
     }
     
