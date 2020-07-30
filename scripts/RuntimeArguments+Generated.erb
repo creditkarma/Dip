@@ -61,7 +61,11 @@ extension DependencyContainer {
                 return previouslyResolved
             }
 
-            return try factory((<%= arg_tuples_lowercase %>))
+            log(level: .Verbose, "Resolve:start \(key.type)")
+            let result = try factory((<%= arg_tuples_lowercase %>))
+            log(level: .Verbose, "Resolve:end \(key.type)")
+            return result
+
         }
 
         definitionWeak = definition

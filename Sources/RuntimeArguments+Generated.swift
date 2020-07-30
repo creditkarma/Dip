@@ -1,15 +1,14 @@
 // AUTO-GENERATED: RuntimeArugment+Generated.erb. Run ./generate
 
 extension DependencyContainer {
-
     // MARK: 1 Runtime Argument
 
     /**
      Register factory that accepts one runtime argument of type `A`. You can use up to six runtime arguments.
 
      - note: You can have several factories with different number or types of arguments registered for same type,
-     optionally associated with some tags. When container resolves that type it matches the type,
-     __number__, __types__ and __order__ of runtime arguments and optional tag that you pass to `resolve(tag:arguments:)` method.
+           optionally associated with some tags. When container resolves that type it matches the type,
+           __number__, __types__ and __order__ of runtime arguments and optional tag that you pass to `resolve(tag:arguments:)` method.
 
      - parameters:
      - tag: The arbitrary tag to associate this factory with. Pass `nil` to associate with any tag. Default value is `nil`.
@@ -41,7 +40,10 @@ extension DependencyContainer {
                 return previouslyResolved
             }
 
-            return try factory(a)
+            log(level: .Verbose, "Resolve:start \(key.type)")
+            let result = try factory(a)
+            log(level: .Verbose, "Resolve:end \(key.type)")
+            return result
         }
 
         definitionWeak = definition
@@ -53,19 +55,19 @@ extension DependencyContainer {
      Resolve type `T` using one runtime argument.
 
      - note: When resolving a type container will first try to use definition
-     that exactly matches types of arguments that you pass to resolve method.
-     If it fails or no such definition is found container will try to _auto-wire_ component.
-     For that it will iterate through all the definitions registered for that type
-     which factories accept any number of runtime arguments and are tagged with the same tag,
-     passed to `resolve` method, or with no tag. Container will try to use these definitions
-     to resolve a component one by one until one of them succeeds, starting with tagged definitions
-     in order of decreasing their's factories number of arguments. If none of them succeds it will
-     throw an error. If it finds two definitions with the same number of arguments - it will throw
-     an error.
+            that exactly matches types of arguments that you pass to resolve method.
+            If it fails or no such definition is found container will try to _auto-wire_ component.
+            For that it will iterate through all the definitions registered for that type
+            which factories accept any number of runtime arguments and are tagged with the same tag,
+            passed to `resolve` method, or with no tag. Container will try to use these definitions
+            to resolve a component one by one until one of them succeeds, starting with tagged definitions
+            in order of decreasing their's factories number of arguments. If none of them succeds it will
+            throw an error. If it finds two definitions with the same number of arguments - it will throw
+            an error.
 
      - parameters:
-     - tag: The arbitrary tag to lookup registered definition.
-     - arg1: The first argument to pass to the definition's factory.
+       - tag: The arbitrary tag to lookup registered definition.
+       - arg1: The first argument to pass to the definition's factory.
 
      - throws: `DipError.DefinitionNotFound`, `DipError.AutoInjectionFailed`, `DipError.AmbiguousDefinitions`
 
@@ -111,7 +113,10 @@ extension DependencyContainer {
                 return previouslyResolved
             }
 
-            return try factory((a, b))
+            log(level: .Verbose, "Resolve:start \(key.type)")
+            let result = try factory((a, b))
+            log(level: .Verbose, "Resolve:end \(key.type)")
+            return result
         }
 
         definitionWeak = definition
@@ -159,7 +164,10 @@ extension DependencyContainer {
                 return previouslyResolved
             }
 
-            return try factory((a, b, c))
+            log(level: .Verbose, "Resolve:start \(key.type)")
+            let result = try factory((a, b, c))
+            log(level: .Verbose, "Resolve:end \(key.type)")
+            return result
         }
 
         definitionWeak = definition
@@ -208,7 +216,10 @@ extension DependencyContainer {
                 return previouslyResolved
             }
 
-            return try factory((a, b, c, d))
+            log(level: .Verbose, "Resolve:start \(key.type)")
+            let result = try factory((a, b, c, d))
+            log(level: .Verbose, "Resolve:end \(key.type)")
+            return result
         }
 
         definitionWeak = definition
@@ -258,7 +269,10 @@ extension DependencyContainer {
                 return previouslyResolved
             }
 
-            return try factory((a, b, c, d, e))
+            log(level: .Verbose, "Resolve:start \(key.type)")
+            let result = try factory((a, b, c, d, e))
+            log(level: .Verbose, "Resolve:end \(key.type)")
+            return result
         }
 
         definitionWeak = definition
@@ -309,7 +323,10 @@ extension DependencyContainer {
                 return previouslyResolved
             }
 
-            return try factory((a, b, c, d, e, f))
+            log(level: .Verbose, "Resolve:start \(key.type)")
+            let result = try factory((a, b, c, d, e, f))
+            log(level: .Verbose, "Resolve:end \(key.type)")
+            return result
         }
 
         definitionWeak = definition
