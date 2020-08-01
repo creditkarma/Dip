@@ -60,6 +60,8 @@ public final class DependencyContainer {
   }
   
   public static var enableAutoInjection: Bool? = nil;
+  
+  public static var maxRecursiveDepth: Int = 100
 
   /**
    Designated initializer for a DependencyContainer
@@ -182,12 +184,15 @@ extension DependencyContainer {
     
     var logErrors: Bool = true
     
-    init(key: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String?, inCollaboration: Bool, container: DependencyContainer) {
+    let depth : Int
+    
+    init(key: DefinitionKey, injectedInType: Any.Type?, injectedInProperty: String?, inCollaboration: Bool, container: DependencyContainer, depth: Int) {
       self.key = key
       self.injectedInType = injectedInType
       self.injectedInProperty = injectedInProperty
       self.inCollaboration = inCollaboration
       self.container = container
+      self.depth = depth
     }
     
     public var debugDescription: String {
@@ -216,6 +221,10 @@ extension DependencyContainer {
     return try threadSafe {
       let currentContext = self.context
       
+      if currentContext?.depth ?? 0 > DependencyContainer.maxRecursiveDepth {
+        throw DipError.recursionDepthReached(key: aKey)
+      }
+      
       defer {
         context = currentContext
         
@@ -243,7 +252,8 @@ extension DependencyContainer {
         injectedInType: injectedInType,
         injectedInProperty: injectedInProperty,
         inCollaboration: inCollaboration,
-        container: container
+        container: container,
+        depth: (currentContext?.depth ?? -1) + 1
       )
       context.logErrors = logErrors ?? currentContext?.logErrors ?? true
       

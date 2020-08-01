@@ -24,11 +24,11 @@ class ParentTests: XCTestCase {
   }
 
 
-  class ServiceA {}
+  fileprivate class ServiceA {}
 
-  class Password {
+  fileprivate class Password {
     let text: String
-    let service : ServiceA
+    fileprivate let service : ServiceA
 
     init(text:String, service: ServiceA) {
       self.text = text
